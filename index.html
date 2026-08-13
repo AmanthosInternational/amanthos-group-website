@@ -2540,14 +2540,23 @@
             }
         }
         @media (hover: none) {
+            /* Kill the hover motion on touch, but never take the card out of
+               the layout: mobile browsers apply :hover during a tap, so
+               display:none removes the element mid-tap and the click event
+               never reaches the <a>. That broke every outbound card link. */
             .hotel-card:hover, .news-card:hover, .founder-card:hover,
             .team-card:hover, .apt-card:hover, .partner-logo:hover,
-            .pillar__visual::before, .pillar__visual::after {
-                display: none !important;
-            }
             .about__visual:hover {
                 transform: none !important;
                 box-shadow: none !important;
+            }
+            .hotel-card:hover .hotel-card__bg,
+            .hotel-card:hover .hotel-card__img > * {
+                transform: none !important;
+            }
+            /* Decorative pseudo-elements, nothing clickable — safe to drop. */
+            .pillar__visual::before, .pillar__visual::after {
+                display: none !important;
             }
         }
 
