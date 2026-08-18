@@ -1,0 +1,83 @@
+# Woechentlicher Qualitaetswaechter fuer www.amanthos.com
+#
+# Prueft die DEPLOYTE Seite, nicht das Repo: tote Links, Core Web Vitals und
+# Barrierefreiheit. Kein Build-Step, kein package.json, keine Lockfiles - alles laeuft
+# ueber npx bzw. wird nach $RUNNER_TEMP installiert. Braucht kein einziges Secret.
+#
+# Kein PR-Blocker: Auf diesem Repo laufen kaum Pull Requests. Ausgeloest wird nach dem
+# Deploy, woechentlich und von Hand.
+name: Quality
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [v3]
+  schedule:
+    # Versetzt zu den Schwesterseiten, damit nie mehrere Crawls gleichzeitig laufen.
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  SITE_URL: https://www.amanthos.com
+
+jobs:
+  links:
+    name: Tote Links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: GitHub Pages nach dem Deploy abwarten
+        if: github.event_name == 'push'
+        run: sleep 120
+      - name: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # 429 wird akzeptiert: LinkedIn und Instagram antworten Crawlern mit
+          # Rate-Limit statt mit 200, das ist kein toter Link.
+          args: >-
+            --base-url ${{ env.SITE_URL }}
+            --accept 200..=206,429
+            --no-progress
+            --max-concurrency 4
+            './**/*.html'
+          fail: true
+
+  lighthouse:
+    name: Web Vitals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: GitHub Pages nach dem Deploy abwarten
+        if: github.event_name == 'push'
+        run: sleep 120
+      - name: Unlighthouse gegen die Live-Seite
+        # Erster Lauf bewusst ohne Budget: erst die Baseline messen, dann in einem
+        # Folge-Commit ein Budget festschreiben. Ein geratenes Budget waere entweder
+        # wirkungslos oder dauerhaft rot.
+        run: npx --yes @unlighthouse/cli ci --site "$SITE_URL" --no-cache
+
+  a11y:
+    name: Barrierefreiheit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: GitHub Pages nach dem Deploy abwarten
+        if: github.event_name == 'push'
+        run: sleep 120
+      - name: Playwright und axe nach RUNNER_TEMP installieren
+        # Bewusst NICHT ins Repo: dieses Repo bleibt ohne package.json und node_modules.
+        run: |
+          npm install --prefix "$RUNNER_TEMP/a11y" playwright @axe-core/playwright
+          npx --prefix "$RUNNER_TEMP/a11y" playwright install --with-deps chromium
+      - name: axe-Scan
+        env:
+          NODE_PATH: ${{ runner.temp }}/a11y/node_modules
+        run: node .github/scripts/axe.cjs "https://www.amanthos.com/" "https://www.amanthos.com/agb/" "https://www.amanthos.com/agb/en/" "https://www.amanthos.com/privacy/" "https://www.amanthos.com/imprint/" "https://www.amanthos.com/imprint/en/"
