@@ -173,6 +173,22 @@
         .reveal-delay-4 { transition-delay: 0.4s; }
         .reveal-delay-5 { transition-delay: 0.5s; }
 
+        /* ── Nur fuer Screenreader ── */
+        /* Diese Seite bindet css/style.css NICHT ein, ihr CSS ist vollstaendig
+           inline. Die dort vorhandene .sr-only-Klasse greift hier also nicht und
+           muss eigens definiert werden, sonst steht das Label sichtbar im Layout. */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         /* ── Language Toggle ── */
         [data-lang="de"] [data-en],
         [data-lang="en"] [data-de] {
@@ -4539,24 +4555,24 @@
                     <h4 data-de="">Kontakt aufnehmen</h4>
                     <h4 data-en="">Get in Touch</h4>
                     <form onsubmit="event.preventDefault();">
-                        <div class="hp-field"><label>Leave empty</label><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
+                        <div class="hp-field" aria-hidden="true"><label>Leave empty</label><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
                         <div class="form-group">
                             <label for="inv-name">Name</label>
                             <input type="text" id="inv-name" required="">
                         </div>
                         <div class="form-group">
-                            <label data-de="">Unternehmen</label>
-                            <label data-en="">Company</label>
-                            <input type="text">
+                            <label for="inv-company" data-de="">Unternehmen</label>
+                            <label for="inv-company" data-en="">Company</label>
+                            <input type="text" id="inv-company">
                         </div>
                         <div class="form-group">
-                            <label>E-Mail</label>
-                            <input type="email" required="">
+                            <label for="inv-email">E-Mail</label>
+                            <input type="email" id="inv-email" required="">
                         </div>
                         <div class="form-group">
-                            <label data-de="">Interesse</label>
-                            <label data-en="">Interest</label>
-                            <select>
+                            <label for="inv-interest" data-de="">Interesse</label>
+                            <label for="inv-interest" data-en="">Interest</label>
+                            <select id="inv-interest">
                                 <option value="" data-de="">Bitte wählen</option>
                                 <option value="" data-en="">Please select</option>
                                 <option data-de="">Hotel-Investment</option>
@@ -4572,9 +4588,9 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label data-de="">Nachricht</label>
-                            <label data-en="">Message</label>
-                            <textarea rows="3"></textarea>
+                            <label for="inv-message" data-de="">Nachricht</label>
+                            <label for="inv-message" data-en="">Message</label>
+                            <textarea rows="3" id="inv-message"></textarea>
                         </div>
                         <button type="submit" class="btn btn--primary" style="width: 100%;" data-de="">Anfrage senden</button>
                         <button type="submit" class="btn btn--primary" style="width: 100%;" data-en="">Send Inquiry</button>
@@ -4594,8 +4610,10 @@
                     <p data-en="">Deals, market reports and portfolio updates directly in your inbox.</p>
                 </div>
                 <form class="newsletter__form" onsubmit="event.preventDefault();">
-                    <div class="hp-field"><input type="text" name="company_url" tabindex="-1" autocomplete="off"></div>
-                    <input type="email" placeholder="E-Mail-Adresse" required="">
+                    <div class="hp-field" aria-hidden="true"><input type="text" name="company_url" tabindex="-1" autocomplete="off"></div>
+                    <label class="sr-only" for="newsletter-email" data-de="">E-Mail-Adresse</label>
+                    <label class="sr-only" for="newsletter-email" data-en="">Email address</label>
+                    <input type="email" id="newsletter-email" placeholder="E-Mail-Adresse" required="">
                     <button type="submit" data-de="">Abonnieren</button>
                     <button type="submit" data-en="">Subscribe</button>
                 </form>
