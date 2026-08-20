@@ -4855,19 +4855,21 @@
             });
         });
 
-        // ── GA4: Formular-Ereignisse ──
+        // ── Formular-Versand und GA4-Ereignisse ──
         //
-        // ACHTUNG BEI DER AUSWERTUNG: Beide Formulare senden heute NICHTS. Sie
-        // tragen onsubmit="event.preventDefault();" und es existiert kein
-        // Backend-Handler dahinter (Stand 20.08.2026, Formular-Backend ist ein
-        // separater Auftrag). Diese Ereignisse messen deshalb die ABSICHT des
-        // Besuchers -- er hat abgeschickt -- und NICHT eine erfolgreiche
-        // Kontaktaufnahme. Wer generate_lead als eingegangene Anfrage liest,
-        // liest falsch, solange das Backend fehlt.
+        // Bis zum 20.08.2026 trugen beide Formulare onsubmit="event.preventDefault();"
+        // und es gab keinen Handler dahinter: Wer hier schrieb, dessen Nachricht
+        // verschwand spurlos, ohne Fehlermeldung. Seit group-booking#125 nimmt
+        // POST /api/contact sie entgegen und stellt sie per Mail zu.
         //
-        // Es verlaesst kein einziger Feldwert den Browser: kein Name, keine
-        // E-Mail-Adresse, kein Unternehmen, kein Nachrichtentext. Uebermittelt
-        // wird nur die feste Auswahl des Interesse-Selects.
+        // Das preventDefault bleibt bewusst stehen -- es verhindert weiterhin den
+        // nativen Seitenwechsel; der Versand laeuft hier per fetch.
+        //
+        // WICHTIG: generate_lead und newsletter_signup feuern ERST nach
+        // bestaetigter Zustellung. Ein Lead in den Berichten, hinter dem keine
+        // Nachricht steckt, waere schlimmer als gar keine Messung.
+        var CONTACT_API = 'https://amanthos-website-api.onrender.com/api/contact';
+
         function amTrack(name, params) {
             try {
                 if (typeof window.gtag !== 'function') return;
@@ -4875,25 +4877,114 @@
             } catch (e) { /* Analytics bricht nie eine Seite */ }
         }
 
+        function amSprache() {
+            try {
+                var l = document.documentElement.getAttribute('data-lang')
+                    || document.documentElement.getAttribute('lang') || 'de';
+                return l.slice(0, 2).toLowerCase() === 'en' ? 'en' : 'de';
+            } catch (e) { return 'de'; }
+        }
+
+        function amMeldung(form, text, gelungen) {
+            var el = form.querySelector('.form-feedback');
+            if (!el) {
+                el = document.createElement('p');
+                el.className = 'form-feedback';
+                el.setAttribute('role', 'status');
+                el.setAttribute('aria-live', 'polite');
+                el.style.cssText = 'margin:12px 0 0;font-size:.95rem;line-height:1.5;';
+                form.appendChild(el);
+            }
+            el.textContent = text;
+            el.style.color = gelungen ? '#1f7a3d' : '#b3261e';
+        }
+
+        function amSenden(form, nutzlast, texte, beiErfolg) {
+            var knoepfe = form.querySelectorAll('button[type="submit"]');
+            var i;
+            for (i = 0; i < knoepfe.length; i++) { knoepfe[i].disabled = true; }
+            amMeldung(form, texte.laeuft, true);
+
+            var freigeben = function () {
+                for (var j = 0; j < knoepfe.length; j++) { knoepfe[j].disabled = false; }
+            };
+
+            fetch(CONTACT_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nutzlast)
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; })
+                    .then(function (d) { return { ok: r.ok, daten: d }; });
+            }).then(function (res) {
+                if (res.ok) {
+                    form.reset();
+                    amMeldung(form, texte.erfolg, true);
+                    beiErfolg();
+                } else {
+                    amMeldung(form, texte.fehler, false);
+                }
+            }).catch(function () {
+                amMeldung(form, texte.fehler, false);
+            }).then(freigeben, freigeben);
+        }
+
         try {
-            const invEmail = document.getElementById('inv-email');
-            const contactForm = invEmail && invEmail.form;
+            var de = amSprache() === 'de';
+            var wartet = de ? 'Wird gesendet …' : 'Sending …';
+            var schiefText = de
+                ? 'Das hat leider nicht geklappt. Bitte versuchen Sie es später erneut oder schreiben Sie an info@amanthos.com.'
+                : 'That did not work. Please try again later, or write to info@amanthos.com.';
+
+            var invEmail = document.getElementById('inv-email');
+            var contactForm = invEmail && invEmail.form;
             if (contactForm) {
                 contactForm.addEventListener('submit', function () {
-                    const select = document.getElementById('inv-interest');
-                    const interest = select && select.value ? select.value : '';
-                    amTrack('generate_lead', interest ? { interest: interest } : {});
+                    var wert = function (id) {
+                        var el = document.getElementById(id);
+                        return el && el.value ? el.value : '';
+                    };
+                    var falle = contactForm.querySelector('input[name="website"]');
+                    var interesse = wert('inv-interest');
+                    amSenden(contactForm, {
+                        form: 'contact',
+                        name: wert('inv-name'),
+                        company: wert('inv-company'),
+                        email: wert('inv-email'),
+                        interest: interesse,
+                        message: wert('inv-message'),
+                        website: falle ? falle.value : ''
+                    }, {
+                        laeuft: wartet,
+                        erfolg: de ? 'Vielen Dank, Ihre Anfrage ist bei uns eingegangen. Wir melden uns zeitnah.'
+                                   : 'Thank you, your inquiry has reached us. We will be in touch shortly.',
+                        fehler: schiefText
+                    }, function () {
+                        amTrack('generate_lead', interesse ? { interest: interesse } : {});
+                    });
                 });
             }
 
-            const newsEmail = document.getElementById('newsletter-email');
-            const newsletterForm = newsEmail && newsEmail.form;
+            var newsEmail = document.getElementById('newsletter-email');
+            var newsletterForm = newsEmail && newsEmail.form;
             if (newsletterForm) {
                 newsletterForm.addEventListener('submit', function () {
-                    amTrack('newsletter_signup');
+                    var falle = newsletterForm.querySelector('input[name="company_url"]');
+                    amSenden(newsletterForm, {
+                        form: 'newsletter',
+                        email: newsEmail.value || '',
+                        company_url: falle ? falle.value : ''
+                    }, {
+                        laeuft: wartet,
+                        erfolg: de ? 'Danke, Sie sind für den Newsletter angemeldet.'
+                                   : 'Thank you, you are subscribed to the newsletter.',
+                        fehler: schiefText
+                    }, function () {
+                        amTrack('newsletter_signup');
+                    });
                 });
             }
-        } catch (e) { /* Analytics bricht nie eine Seite */ }
+        } catch (e) { /* ein Formularfehler darf die Seite nie brechen */ }
     </script>
 
 </body></html>
