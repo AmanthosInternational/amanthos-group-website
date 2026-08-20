@@ -65,7 +65,10 @@
     'line-height:1.55;padding:1rem 1.25rem;box-shadow:0 -2px 14px rgba(0,0,0,.28)}',
     '.am-consent-inner{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;',
     'align-items:center;justify-content:space-between;gap:.8rem 1.5rem}',
-    '.am-consent-text{margin:0;flex:1 1 320px}',
+        // Farbe explizit am Element, nicht nur geerbt: Auf den Rechtsseiten faerbt
+    // eine eigene p-Regel den Fliesstext dunkel und schlaegt die Vererbung vom
+    // Banner. Gemessen 1.55:1 auf #2a2c25, also praktisch unlesbar.
+    '.am-consent-text{margin:0;flex:1 1 320px;color:#faf8f5}',
     '.am-consent-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem}',
     '.am-consent-btn{font:inherit;cursor:pointer;border:1px solid #faf8f5;',
     'background:transparent;color:#faf8f5;padding:.55rem 1.5rem;border-radius:2px;',
