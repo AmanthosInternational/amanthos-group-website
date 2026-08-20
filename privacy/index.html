@@ -104,6 +104,16 @@
     window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
     plausible.init()
   </script>
+  <!-- Google Analytics 4 (eigene Property). consent.js laedt SYNCHRON und VOR dem
+       gtag-Loader: nur so stehen die Consent-Defaults, bevor gtag konfiguriert. -->
+  <script src="../js/consent.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1EW53WRTNR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1EW53WRTNR');
+  </script>
 </head>
 <body>
   <div class="container">
@@ -139,10 +149,13 @@
 
     <h2>3. Cookies</h2>
     <p>
-      Unsere Website kann Cookies verwenden. Cookies sind kleine Textdateien, die auf Ihrem Ger&auml;t gespeichert werden und die eine Analyse der Benutzung der Website erm&ouml;glichen. Sie k&ouml;nnen die Verwendung von Cookies in Ihren Browser-Einstellungen einschr&auml;nken oder deaktivieren.
+      Unsere Website verwendet Cookies. Cookies sind kleine Textdateien, die auf Ihrem Ger&auml;t gespeichert werden und die eine Analyse der Benutzung der Website erm&ouml;glichen. Sie k&ouml;nnen die Verwendung von Cookies in Ihren Browser-Einstellungen einschr&auml;nken oder deaktivieren.
     </p>
     <p>
-      Wir unterscheiden zwischen technisch notwendigen Cookies, die f&uuml;r den Betrieb der Website erforderlich sind, und optionalen Cookies, die zu Analyse- oder Marketingzwecken eingesetzt werden k&ouml;nnen. Optionale Cookies werden nur mit Ihrer ausdr&uuml;cklichen Zustimmung gesetzt.
+      Gesetzt werden Analyse-Cookies der unter Ziffer 7 beschriebenen Reichweitenmessung mit Google Analytics. Cookies f&uuml;r Werbung oder ger&auml;te&uuml;bergreifende Wiedererkennung setzen wir nicht. Ihre Entscheidung zur Reichweitenmessung halten wir im lokalen Speicher Ihres Browsers fest, damit wir Sie nicht bei jedem Besuch erneut fragen m&uuml;ssen.
+    </p>
+    <p>
+      Ob die Analyse-Cookies gesetzt werden, h&auml;ngt davon ab, von wo aus Sie die Website aufrufen: im Europ&auml;ischen Wirtschaftsraum und im Vereinigten K&ouml;nigreich erst nach Ihrer Einwilligung, in der Schweiz und im &uuml;brigen Ausland bis zu Ihrem Widerspruch. Einzelheiten und den Weg zum Widerruf finden Sie unter Ziffer 7.
     </p>
 
     <hr class="divider">
@@ -184,7 +197,26 @@
 
     <hr class="divider">
 
-    <h2>7. Rechte der Nutzer</h2>
+    <h2>7. Google Analytics 4</h2>
+    <p>
+      Erg&auml;nzend zu Plausible setzen wir Google Analytics 4 ein, einen Dienst der Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Zweck ist die Reichweiten- und Nutzungsmessung: Wir wollen wissen, welche Inhalte gefunden werden und an welcher Stelle Besucher die Website wieder verlassen. Google Analytics setzt daf&uuml;r Cookies (<code>_ga</code> und <code>_ga_&lt;Kennung&gt;</code>) und erfasst technische Angaben zu Browser, Ger&auml;t und ungef&auml;hrem Standort.
+    </p>
+    <p>
+      Senden Sie das Kontakt- oder das Newsletter-Formular ab, z&auml;hlen wir diesen Vorgang als Ereignis. &Uuml;bermittelt wird dabei h&ouml;chstens die von Ihnen im Auswahlfeld gew&auml;hlte Interessensangabe. Name, E-Mail-Adresse, Unternehmen und Nachrichtentext werden nicht &uuml;bermittelt; sie verlassen Ihren Browser nicht.
+    </p>
+    <p>
+      Wir nutzen weder Google Signals noch eine Verkn&uuml;pfung mit Google Ads; werbebezogene Einwilligungssignale sind dauerhaft deaktiviert. Die Daten werden 14 Monate aufbewahrt und danach automatisch gel&ouml;scht.
+    </p>
+    <p>
+      <strong>Rechtsgrundlage und Ihre Wahl:</strong> Besuchen Sie diese Website aus dem Europ&auml;ischen Wirtschaftsraum oder dem Vereinigten K&ouml;nigreich, findet keine Messung statt, solange Sie nicht eingewilligt haben. In der Schweiz und im &uuml;brigen Ausland st&uuml;tzen wir die Messung auf unser berechtigtes Interesse an einer funktionierenden Website; Sie k&ouml;nnen jederzeit widersprechen. Lehnen Sie ab, wird die Messung vollst&auml;ndig abgeschaltet, es wird kein einziger Aufruf mehr an Google gesendet.
+    </p>
+    <p>
+      <a href="#" onclick="return window.amConsent ? (amConsent.open(), false) : false">Einwilligung &auml;ndern oder widerrufen</a>
+    </p>
+
+    <hr class="divider">
+
+    <h2>8. Rechte der Nutzer</h2>
     <p>
       Sie haben jederzeit das Recht, unentgeltlich Auskunft &uuml;ber Herkunft, Empf&auml;nger und Zweck Ihrer gespeicherten personenbezogenen Daten zu erhalten. Sie haben ausserdem ein Recht auf Berichtigung, Sperrung oder L&ouml;schung dieser Daten.
     </p>
@@ -205,7 +237,7 @@
 
     <hr class="divider">
 
-    <h2>8. Kontakt</h2>
+    <h2>9. Kontakt</h2>
     <p>
       F&uuml;r Fragen zum Datenschutz k&ouml;nnen Sie sich jederzeit an uns wenden:
     </p>
@@ -218,7 +250,7 @@
     <hr class="divider">
 
     <p style="margin-top: 2rem; font-size: 0.85rem; color: #8A8A8A;">
-      Stand: März 2026
+      Stand: August 2026
     </p>
   </div>
 </body>

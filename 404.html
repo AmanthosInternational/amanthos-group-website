@@ -96,6 +96,19 @@
     // Buchungsnummern enthalten.
     plausible('404', { props: { path: location.pathname } });
   </script>
+
+  <!-- Google Analytics 4 (eigene Property). consent.js laedt SYNCHRON und VOR dem
+       gtag-Loader: nur so stehen die Consent-Defaults, bevor gtag konfiguriert.
+       Pfade hier absolut, weil die Fehlerseite unter jeder beliebigen URL
+       ausgeliefert wird -- relativ wuerde sie ins Leere zeigen. -->
+  <script src="/js/consent.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1EW53WRTNR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1EW53WRTNR');
+  </script>
 </head>
 <body>
   <div class="container">

@@ -3039,6 +3039,16 @@
     window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
     plausible.init()
   </script>
+  <!-- Google Analytics 4 (eigene Property). consent.js laedt SYNCHRON und VOR dem
+       gtag-Loader: nur so stehen die Consent-Defaults, bevor gtag konfiguriert. -->
+  <script src="./js/consent.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1EW53WRTNR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1EW53WRTNR');
+  </script>
 </head>
 <body>
 
@@ -4844,6 +4854,46 @@
                 }
             });
         });
+
+        // ── GA4: Formular-Ereignisse ──
+        //
+        // ACHTUNG BEI DER AUSWERTUNG: Beide Formulare senden heute NICHTS. Sie
+        // tragen onsubmit="event.preventDefault();" und es existiert kein
+        // Backend-Handler dahinter (Stand 20.08.2026, Formular-Backend ist ein
+        // separater Auftrag). Diese Ereignisse messen deshalb die ABSICHT des
+        // Besuchers -- er hat abgeschickt -- und NICHT eine erfolgreiche
+        // Kontaktaufnahme. Wer generate_lead als eingegangene Anfrage liest,
+        // liest falsch, solange das Backend fehlt.
+        //
+        // Es verlaesst kein einziger Feldwert den Browser: kein Name, keine
+        // E-Mail-Adresse, kein Unternehmen, kein Nachrichtentext. Uebermittelt
+        // wird nur die feste Auswahl des Interesse-Selects.
+        function amTrack(name, params) {
+            try {
+                if (typeof window.gtag !== 'function') return;
+                window.gtag('event', name, params || {});
+            } catch (e) { /* Analytics bricht nie eine Seite */ }
+        }
+
+        try {
+            const invEmail = document.getElementById('inv-email');
+            const contactForm = invEmail && invEmail.form;
+            if (contactForm) {
+                contactForm.addEventListener('submit', function () {
+                    const select = document.getElementById('inv-interest');
+                    const interest = select && select.value ? select.value : '';
+                    amTrack('generate_lead', interest ? { interest: interest } : {});
+                });
+            }
+
+            const newsEmail = document.getElementById('newsletter-email');
+            const newsletterForm = newsEmail && newsEmail.form;
+            if (newsletterForm) {
+                newsletterForm.addEventListener('submit', function () {
+                    amTrack('newsletter_signup');
+                });
+            }
+        } catch (e) { /* Analytics bricht nie eine Seite */ }
     </script>
 
 </body></html>
