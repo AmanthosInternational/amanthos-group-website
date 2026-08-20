@@ -105,6 +105,46 @@
     return TEXTS[code] || TEXTS[FALLBACK_LANG];
   }
 
+  /*
+   * Bereits gesetzte Google-Cookies entfernen.
+   *
+   * `analytics_storage: denied` und der ga-disable-Kill-Switch verhindern NEUE
+   * Cookies und neue Hits. Was schon auf dem Geraet liegt, raeumen sie nicht
+   * weg: die Kennung _ga ueberlebt eine Ablehnung sonst zwei Jahre lang.
+   *
+   * Zwei Fallstricke, die den naiven Einzeiler wirkungslos machen:
+   *  - Geloescht wird nur, wenn Name, Pfad UND Domain exakt zur Setzung passen.
+   *    GA4 setzt _ga auf der registrierbaren Domain (".example.com"), nicht auf
+   *    dem Host. Darum jede Domain-Variante durchgehen.
+   *  - Der Name von _ga_<ID> haengt an der Mess-ID, und aus der GTM-Zeit koennen
+   *    _gcl_*-Cookies liegen. Darum document.cookie lesen statt Namen raten.
+   */
+  function clearGoogleCookies() {
+    try {
+      var parts = String(location.hostname || '').split('.');
+      var scopes = [''];
+      for (var i = 0; i < parts.length - 1; i++) {
+        var d = parts.slice(i).join('.');
+        scopes.push('; domain=.' + d);
+        scopes.push('; domain=' + d);
+      }
+      var names = { '_ga': true };
+      names['_ga_' + String(GA4_ID).replace(/^G-/, '')] = true;
+      var raw = document.cookie ? document.cookie.split(';') : [];
+      for (var j = 0; j < raw.length; j++) {
+        var n = raw[j].split('=')[0].trim();
+        if (/^(_ga|_gid|_gat|_gac_|_gcl_)/.test(n)) { names[n] = true; }
+      }
+      var dead = '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; max-age=0';
+      for (var name in names) {
+        if (!Object.prototype.hasOwnProperty.call(names, name)) { continue; }
+        for (var k = 0; k < scopes.length; k++) {
+          document.cookie = name + dead + scopes[k];
+        }
+      }
+    } catch (e) { /* nie werfen */ }
+  }
+
   function apply(state) {
     // Reihenfolge zaehlt: erst den Kill-Switch loesen bzw. setzen, dann melden.
     if (state === 'granted') {
@@ -113,6 +153,7 @@
     } else {
       gtag('consent', 'update', { analytics_storage: 'denied' });
       window['ga-disable-' + GA4_ID] = true;
+      clearGoogleCookies();
     }
   }
 
