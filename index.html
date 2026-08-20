@@ -3027,7 +3027,46 @@
                 font-size: 1.8rem;
             }
         }
-    </style>
+    
+/* ===================================================================
+   Barrierefreiheit: Kontraste auf WCAG AA (4.5:1)
+   Alle Werte gemessen, nicht geschaetzt. Gold braucht drei Rollen,
+   weil dieselbe Farbe auf hellem Grund dunkler und auf dunklem Grund
+   heller sein muss; --gold selbst bleibt unveraendert, damit die
+   heute konformen Stellen auf dunklem Grund es auch bleiben.
+   =================================================================== */
+:root {
+  --gold-text: #c73f41;   /* Gold als Text auf hellem Grund: 4.98 auf Weiss, 4.53 auf #f5f4f2 */
+  --gold-hell: #d15f60;   /* Gold als Flaeche mit dunklem Text und als Text auf dunklem Grund: 4.51 */
+  --text-tertiary: #707070; /* war #888888: 3.54 auf Weiss. Neu 4.95 auf Weiss, 4.51 auf #f5f4f2 */
+}
+
+/* Gold als Text auf hellem Grund (war 4.12 auf Weiss / 3.75 auf #f5f4f2) */
+.section-label,
+.apt-card__region,
+.about__text a,
+.nav__lang button.active { color: var(--gold-text); }
+
+/* Gold als Flaeche, dunkler Text darauf (war 4.16) */
+.btn--primary,
+.hotel-card__badge,
+.deal-type--office { background: var(--gold-hell); }
+
+/* Gold als Text auf dunklem Grund (war 4.16) - im Footer gilt die helle Rolle */
+.footer__brand span,
+.footer__col h5,
+.footer .nav__lang button.active { color: var(--gold-hell); }
+
+/* Sekundaertext auf dunklem Grund: Alpha .3 ergab 2.71, .4 ergab 3.81.
+   .55 ergibt 5.99 auf #1a1c19 und 5.19 auf #2e302d. */
+.footer__desc,
+.footer__copy,
+.footer__legal a,
+.kpi-bar__inner p { color: rgba(255,255,255,.55); }
+
+/* Grauer Hilfstext auf dem hellsten Grund #e3dfda braucht mehr als --text-tertiary */
+.contact__map-placeholder { color: #636363; }
+</style>
   <!-- Sentry: error + performance monitoring. Config in js/sentry-init.js -->
   <script src="https://browser.sentry-cdn.com/10.68.0/bundle.tracing.replay.min.js"
           integrity="sha384-XaWdQ+280/sFZD3fFzNgO2vpH3FjdOqMQiQBMoyG5itU99/FvV8v4lrmQNIF4Mau"
@@ -3427,8 +3466,8 @@
                 <div class="kpi__label" data-de="">Märkte</div>
                 <div class="kpi__label" data-en="">Markets</div>
             </div>
-            <p style="text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-top: 16px; letter-spacing: 0.1em;" data-de="">Stand März 2026</p>
-            <p style="text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-top: 16px; letter-spacing: 0.1em;" data-en="">As of March 2026</p>
+            <p style="text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.55); margin-top: 16px; letter-spacing: 0.1em;" data-de="">Stand März 2026</p>
+            <p style="text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.55); margin-top: 16px; letter-spacing: 0.1em;" data-en="">As of March 2026</p>
         </div>
     </section>
 
@@ -3447,8 +3486,8 @@
                     <p class="reveal reveal-delay-2" data-en="">The expansion into Switzerland followed in 2021 with the establishment of Amanthos Holding AG in Greppen on Lake Lucerne. Hotel operations followed with three properties at premium locations in Zurich, Interlaken and Graubünden — alongside Amanthos Living, a dedicated brand for serviced apartments.</p>
                     <p class="reveal reveal-delay-3 visible" data-de="">Unsere Werte: Langfristiges Denken, nachhaltige Wertschöpfung und Partnerschaften, die über einzelne Transaktionen hinausgehen. Wir setzen auf eine Performance-Kultur, in der operative Exzellenz und unternehmerische Geschwindigkeit zusammenkommen. Komplexität reduzieren, Chancen erkennen — auch in Krisenzeiten.</p>
                     <p class="reveal reveal-delay-3" data-en="">Our values: Long-term thinking, sustainable value creation and partnerships that go beyond individual transactions. We foster a performance culture where operational excellence and entrepreneurial speed converge. Reduce complexity, identify opportunities — even in times of crisis.</p>
-                    <p class="reveal reveal-delay-3 visible" data-de="">Transparenz schafft Vertrauen: In unserem Podcast <em>Amanthos On Air</em> geben wir regelmässig Einblicke in Strategie, Deals und die Realität als wachsende Unternehmensgruppe — offen und ungeschönt. Verfügbar auf <a href="https://open.spotify.com/show/6a63xIm7fo9eEtzLNaXzO0" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">Spotify</a>, <a href="https://podcasts.apple.com/us/podcast/amanthos-on-air/id1538292784" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">Apple Podcasts</a> und <a href="https://www.youtube.com/@Amanthos" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">YouTube</a>.</p>
-                    <p class="reveal reveal-delay-3" data-en="">Transparency builds trust: In our podcast <em>Amanthos On Air</em>, we regularly share insights into strategy, deals and the reality of a growing corporate group — openly and unfiltered. Available on <a href="https://open.spotify.com/show/6a63xIm7fo9eEtzLNaXzO0" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">Spotify</a>, <a href="https://podcasts.apple.com/us/podcast/amanthos-on-air/id1538292784" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">Apple Podcasts</a> and <a href="https://www.youtube.com/@Amanthos" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline;">YouTube</a>.</p>
+                    <p class="reveal reveal-delay-3 visible" data-de="">Transparenz schafft Vertrauen: In unserem Podcast <em>Amanthos On Air</em> geben wir regelmässig Einblicke in Strategie, Deals und die Realität als wachsende Unternehmensgruppe — offen und ungeschönt. Verfügbar auf <a href="https://open.spotify.com/show/6a63xIm7fo9eEtzLNaXzO0" target="_blank" rel="noopener" style="color:var(--gold-text);text-decoration:underline;">Spotify</a>, <a href="https://podcasts.apple.com/us/podcast/amanthos-on-air/id1538292784" target="_blank" rel="noopener" style="color:var(--gold-text);text-decoration:underline;">Apple Podcasts</a> und <a href="https://www.youtube.com/@Amanthos" target="_blank" rel="noopener" style="color:var(--gold-text);text-decoration:underline;">YouTube</a>.</p>
+                    <p class="reveal reveal-delay-3" data-en="">Transparency builds trust: In our podcast <em>Amanthos On Air</em>, we regularly share insights into strategy, deals and the reality of a growing corporate group — openly and unfiltered. Available on <a href="https://open.spotify.com/show/6a63xIm7fo9eEtzLNaXzO0" target="_blank" rel="noopener" style="color:var(--gold-text);text-decoration:underline;">Spotify</a>, <a href="https://podcasts.apple.com/us/podcast/amanthos-on-air/id1538292784" target="_blank" rel="noopener" style="color:var(--gold-text);text-decoration:underline;">Apple Podcasts</a> and <a href="https://www.youtube.com/@Amanthos" target="_blank" rel="noopener" style="color:var(--gold-text);text-decoration:underline;">YouTube</a>.</p>
                 </div>
                 <div class="about__visual reveal visible">
                     <div class="about__visual-text">
