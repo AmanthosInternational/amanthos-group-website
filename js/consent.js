@@ -43,14 +43,14 @@
   var TEXTS = {
     de: {
       title: 'Einwilligung in die Reichweitenmessung',
-      text: 'Diese Website misst ihre Nutzung mit Google Analytics und setzt dafür Cookies. Sie entscheiden, ob wir das dürfen. Ihre Wahl können Sie jederzeit ändern.',
+      text: 'Diese Website misst ihre Nutzung mit Google Analytics und den Erfolg unserer Werbung mit dem Meta-Pixel. Der Meta-Pixel wird erst nach Ihrer Zustimmung geladen. Ihre Wahl können Sie jederzeit ändern.',
       accept: 'Akzeptieren',
       decline: 'Ablehnen',
       privacy: 'Datenschutz'
     },
     en: {
       title: 'Consent for usage measurement',
-      text: 'This website measures its usage with Google Analytics and sets cookies for that purpose. You decide whether we may. You can change your choice at any time.',
+      text: 'This website measures its usage with Google Analytics, and how our advertising performs with the Meta pixel. The Meta pixel only loads once you agree. You can change your choice at any time.',
       accept: 'Accept',
       decline: 'Decline',
       privacy: 'Privacy'
