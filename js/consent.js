@@ -155,6 +155,11 @@
       window['ga-disable-' + GA4_ID] = true;
       clearGoogleCookies();
     }
+    // meta.js haengt an dieser Meldung: es laedt mit defer und damit NACH
+    // dem synchronen Erstlauf, bekommt spaetere Wechsel aber sofort mit.
+    try {
+      document.dispatchEvent(new CustomEvent('am:consent-change', { detail: { state: state } }));
+    } catch (e) { /* nie werfen */ }
   }
 
   // ---- Defaults setzen, bevor gtag.js ueberhaupt laedt --------------------
