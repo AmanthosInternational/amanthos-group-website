@@ -4925,6 +4925,21 @@
         // Nachricht steckt, waere schlimmer als gar keine Messung.
         var CONTACT_API = 'https://amanthos-website-api.onrender.com/api/contact';
 
+        // Newsletter-Anmeldungen gehen seit der Listmonk-Umstellung NICHT mehr an
+        // /api/contact. Dort wurden sie nur per Mail zugestellt: niemand wurde
+        // Abonnent, und es gab keine Bestaetigung. Listmonk nimmt Anmeldungen
+        // oeffentlich und ohne Token entgegen und uebernimmt das Double-Opt-in.
+        // Deshalb steht hier kein Geheimnis und es braucht keinen Proxy.
+        var NEWSLETTER_API = 'https://news.amanthos.com/api/public/subscription';
+        // Verdrahtung: UUID der Liste "newsletter" eintragen. Solange sie leer
+        // ist, verhaelt sich das Formular wie bisher und sendet nichts.
+        var NEWSLETTER_LIST_UUID = '';
+        // Nur ein Schutz gegen Doppelklick und versehentliches Mehrfachabsenden.
+        // Echte Ratenbegrenzung kann eine statische Seite nicht leisten; sie
+        // gehoert auf die Listmonk-Seite.
+        var NEWSLETTER_SPERRE_MS = 30000;
+        var newsletterZuletzt = 0;
+
         function amTrack(name, params) {
             try {
                 if (typeof window.gtag !== 'function') return;
@@ -4954,7 +4969,7 @@
             el.style.color = gelungen ? '#1f7a3d' : '#b3261e';
         }
 
-        function amSenden(form, nutzlast, texte, beiErfolg) {
+        function amSenden(form, nutzlast, texte, beiErfolg, ziel) {
             var knoepfe = form.querySelectorAll('button[type="submit"]');
             var i;
             for (i = 0; i < knoepfe.length; i++) { knoepfe[i].disabled = true; }
@@ -4964,7 +4979,7 @@
                 for (var j = 0; j < knoepfe.length; j++) { knoepfe[j].disabled = false; }
             };
 
-            fetch(CONTACT_API, {
+            fetch(ziel || CONTACT_API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(nutzlast)
@@ -4975,7 +4990,7 @@
                 if (res.ok) {
                     form.reset();
                     amMeldung(form, texte.erfolg, true);
-                    beiErfolg();
+                    beiErfolg(res.daten);
                 } else {
                     amMeldung(form, texte.fehler, false);
                 }
@@ -5023,20 +5038,57 @@
             var newsEmail = document.getElementById('newsletter-email');
             var newsletterForm = newsEmail && newsEmail.form;
             if (newsletterForm) {
+                // Wortlaut mit Double-Opt-in: Wer sich anmeldet, ist NOCH NICHT
+                // angemeldet, sondern muss erst bestaetigen. Die fruehere Zusage
+                // "Sie sind angemeldet" waere ab hier schlicht falsch, und der
+                // Einwilligungsnachweis haengt genau an dieser Bestaetigung.
+                var bestaetigen = de
+                    ? 'Fast geschafft. Bitte bestätigen Sie die Anmeldung über den Link, den wir Ihnen gerade geschickt haben.'
+                    : 'Almost done. Please confirm your subscription using the link we just sent you.';
+                var sofort = de
+                    ? 'Danke, Sie sind für den Newsletter angemeldet.'
+                    : 'Thank you, you are subscribed to the newsletter.';
+
                 newsletterForm.addEventListener('submit', function () {
                     var falle = newsletterForm.querySelector('input[name="company_url"]');
+                    // Honeypot: ausgefuellt heisst Bot. Wir melden Erfolg, damit er
+                    // nichts lernt, und schicken nichts.
+                    if (falle && falle.value) {
+                        newsletterForm.reset();
+                        amMeldung(newsletterForm, bestaetigen, true);
+                        return;
+                    }
+                    var jetzt = Date.now();
+                    if (jetzt - newsletterZuletzt < NEWSLETTER_SPERRE_MS) { return; }
+                    if (!NEWSLETTER_LIST_UUID) {
+                        // Noch nicht verdrahtet. Verhaelt sich wie vor dieser
+                        // Aenderung, damit die Seite live nicht schlechter wird.
+                        if (window.console && window.console.error) {
+                            window.console.error('Newsletter: NEWSLETTER_LIST_UUID ist nicht gesetzt.');
+                        }
+                        return;
+                    }
+                    newsletterZuletzt = jetzt;
                     amSenden(newsletterForm, {
-                        form: 'newsletter',
                         email: newsEmail.value || '',
-                        company_url: falle ? falle.value : ''
+                        name: '',
+                        list_uuids: [NEWSLETTER_LIST_UUID]
                     }, {
                         laeuft: wartet,
-                        erfolg: de ? 'Danke, Sie sind für den Newsletter angemeldet.'
-                                   : 'Thank you, you are subscribed to the newsletter.',
+                        erfolg: bestaetigen,
                         fehler: schiefText
-                    }, function () {
+                    }, function (antwort) {
+                        // Listmonk meldet has_optin. Ist die Liste doch ohne
+                        // Doppel-Opt-in konfiguriert, waere der Bestaetigungstext
+                        // falsch, also wird er korrigiert.
+                        try {
+                            var d = antwort && antwort.data;
+                            if (d && d.has_optin === false) {
+                                amMeldung(newsletterForm, sofort, true);
+                            }
+                        } catch (e) { /* Meldung ist Beiwerk, nie ein Fehlergrund */ }
                         amTrack('newsletter_signup');
-                    });
+                    }, NEWSLETTER_API);
                 });
             }
         } catch (e) { /* ein Formularfehler darf die Seite nie brechen */ }
