@@ -8,6 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Hero-Hintergrund ist das LCP-Element. Der Browser entdeckt ihn sonst erst,
+         wenn das 85 KB grosse Inline-CSS geparst ist; der Preload zieht ihn nach vorn.
+         Die beiden media-Bedingungen muessen zur Media-Query bei .hero__bg passen,
+         sonst laedt der Browser beide Varianten. -->
+    <link rel="preload" as="image" href="images/hero-skyline-960.webp" media="(max-width: 767px)" fetchpriority="high">
+    <link rel="preload" as="image" href="images/hero-skyline.webp" media="(min-width: 768px)" fetchpriority="high">
     <style>
         /* ═══════════════════════════════════════════
            AMANTHOS INTERNATIONAL — Design System
@@ -423,8 +429,17 @@
             position: absolute;
             inset: 0;
             background:
-                url('https://images.unsplash.com/photo-1599946347371-68eb71b16afc?w=1920&q=85') center/cover no-repeat;
+                url('images/hero-skyline.webp') center/cover no-repeat;
             opacity: 0.45;
+        }
+
+        /* Schmale Viewports bekommen die 960-px-Variante (67 KB statt 216 KB).
+           Der Breakpoint muss mit dem media-Attribut der Hero-Preloads im <head>
+           uebereinstimmen. */
+        @media (max-width: 767px) {
+            .hero__bg {
+                background-image: url('images/hero-skyline-960.webp');
+            }
         }
 
         /* Dark gradient overlay for text readability */
@@ -754,15 +769,15 @@
 
         .pillar__visual--hospitality {
             background: linear-gradient(135deg, rgba(46,48,45,0.55) 0%, rgba(46,48,45,0.7) 100%),
-                url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80') center/cover no-repeat;
+                url('images/extracted/pillar-hospitality.webp') center/cover no-repeat;
         }
         .pillar__visual--realestate {
             background: linear-gradient(135deg, rgba(46,48,45,0.55) 0%, rgba(46,48,45,0.7) 100%),
-                url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80') center/cover no-repeat;
+                url('images/extracted/pillar-realestate.webp') center/cover no-repeat;
         }
         .pillar__visual--living {
             background: linear-gradient(135deg, rgba(46,48,45,0.55) 0%, rgba(46,48,45,0.7) 100%),
-                url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80') center/cover no-repeat;
+                url('images/extracted/pillar-living.webp') center/cover no-repeat;
         }
 
         .pillar__visual-inner {
@@ -3068,8 +3083,8 @@
 .contact__map-placeholder { color: #636363; }
 </style>
   <!-- Sentry: error + performance monitoring. Config in js/sentry-init.js -->
-  <script src="https://browser.sentry-cdn.com/10.68.0/bundle.tracing.replay.min.js"
-          integrity="sha384-XaWdQ+280/sFZD3fFzNgO2vpH3FjdOqMQiQBMoyG5itU99/FvV8v4lrmQNIF4Mau"
+  <script src="https://browser.sentry-cdn.com/10.68.0/bundle.tracing.min.js"
+          integrity="sha384-IDGicfmkFBjzbyXFRgxkdVAjmPeBqxWZUv7oUbKSCAc+OEMdNXzrciXnPJzd17Xc"
           crossorigin="anonymous" defer></script>
   <script src="./js/sentry-init.js" defer></script>
   <!-- Privacy-friendly analytics by Plausible -->
@@ -3996,7 +4011,7 @@
                 <!-- 2 · München Freiham -->
                 <div class="landmark-card">
                     <div class="landmark-card__visual">
-                        <div class="landmark-card__visual-img" style="background-image:url('https://munichig.de/wp-content/uploads/2025/05/Freiham-Bild-3-scaled.jpg')"></div>
+                        <div class="landmark-card__visual-img" style="background-image:url('images/extracted/landmark-freiham.webp')"></div>
                         <div class="landmark-card__visual-overlay"></div>
                     </div>
                     <div class="landmark-card__info">
@@ -4049,7 +4064,7 @@
                 <!-- 5 · EdelholzQuartier Calw -->
                 <div class="landmark-card">
                     <div class="landmark-card__visual">
-                        <div class="landmark-card__visual-img" style="background-image:url('https://suedbaden-immobilien.de/wp-content/uploads/2023/10/WhatsApp-Image-2023-10-31-at-11.07.24_493b6772.jpg')"></div>
+                        <div class="landmark-card__visual-img" style="background-image:url('images/extracted/landmark-edelholzquartier-calw.webp')"></div>
                         <div class="landmark-card__visual-overlay"></div>
                     </div>
                     <div class="landmark-card__info">
@@ -4067,7 +4082,7 @@
                 <!-- 6 · The Q, Frankfurt -->
                 <div class="landmark-card">
                     <div class="landmark-card__visual">
-                        <div class="landmark-card__visual-img" style="background-image:url('https://bobw.co/getContentAsset/dd09983e-a6f0-4e06-b16c-049eb47113cd/d70cbc27-8723-40ac-9135-a225869e0fb1/LargeScale/Frankfurt_am_Main,_Romer_-_2015_-_6732.webp?language=en')"></div>
+                        <div class="landmark-card__visual-img" style="background-image:url('images/extracted/landmark-the-q-frankfurt.webp')"></div>
                         <div class="landmark-card__visual-overlay"></div>
                     </div>
                     <div class="landmark-card__info">

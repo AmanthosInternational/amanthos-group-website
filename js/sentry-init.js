@@ -10,6 +10,12 @@
  * Both script tags are `defer`, and this file is ordered before the site's own
  * scripts. Deferred scripts run in document order, so Sentry is initialised
  * before app.js/booking.js and catches their errors, without blocking render.
+ *
+ * No Session Replay on this site. Replay costs 37 KB gzip on every page view
+ * and only pays for itself on a booking funnel (analysing abandoned bookings);
+ * the corporate site has none. The three booking sites keep it and load it
+ * lazily on the first interaction with their booking bar. Hence the plain
+ * `bundle.tracing.min.js` in the HTML instead of the `.replay.` variant.
  */
 (function () {
   // The bundle is blocked by common ad blockers. Without this guard that turns
@@ -27,13 +33,6 @@
 
     integrations: [
       Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        // All three default to true — set explicitly so the privacy posture is
-        // stated in the file rather than inherited silently.
-        maskAllText: true,
-        maskAllInputs: true,
-        blockAllMedia: true,
-      }),
     ],
 
     // Core Web Vitals and page load timings. 10% is enough to see trends on a
@@ -49,13 +48,6 @@
     // funnel would break to gain a trace. Connecting browser and backend traces
     // requires allowing both headers server-side first.
     tracePropagationTargets: [],
-
-    // Record a replay only when something actually broke: no blanket recording
-    // of every visitor, and the material that matters (what the guest did
-    // before the booking failed) is still captured. Raise the session rate only
-    // together with the cookie banner and the privacy policy.
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 1.0,
 
     // Noise that is not our code and cannot be fixed by us. Left unfiltered,
     // these bury the real errors — the same failure mode that made 559 of 673
