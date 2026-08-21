@@ -4931,9 +4931,13 @@
         // oeffentlich und ohne Token entgegen und uebernimmt das Double-Opt-in.
         // Deshalb steht hier kein Geheimnis und es braucht keinen Proxy.
         var NEWSLETTER_API = 'https://news.amanthos.com/api/public/subscription';
-        // Verdrahtung: UUID der Liste "newsletter" eintragen. Solange sie leer
-        // ist, verhaelt sich das Formular wie bisher und sendet nichts.
-        var NEWSLETTER_LIST_UUID = '';
+        // UUID der Liste "newsletter" in Listmonk (numerische ID ist 3, die
+        // nimmt der oeffentliche Endpunkt aber nicht). Eingetragen am
+        // 21.08.2026, nachdem SES angeschlossen war: Vorher haette jede
+        // Anmeldung einen unbestaetigten Abonnenten erzeugt, der nie eine
+        // Bestaetigungsmail bekommt, waehrend die Seite "Bitte bestaetigen Sie"
+        // anzeigt. Ist der Wert leer, sendet das Formular nichts.
+        var NEWSLETTER_LIST_UUID = '2c0f7d0c-df27-4685-9fb0-baf58a16f289';
         // Nur ein Schutz gegen Doppelklick und versehentliches Mehrfachabsenden.
         // Echte Ratenbegrenzung kann eine statische Seite nicht leisten; sie
         // gehoert auf die Listmonk-Seite.
