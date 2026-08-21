@@ -83,6 +83,14 @@
       text-decoration: none;
     }
 
+    /* Links im Fliesstext brauchen ein nichtfarbliches Merkmal (WCAG 1.4.1,
+       axe link-in-text-block). Der Zurueck-Link steht allein und bleibt ohne. */
+    p a,
+    li a {
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+    }
+
     a:hover {
       text-decoration: underline;
     }
@@ -217,7 +225,30 @@
 
     <hr class="divider">
 
-    <h2>8. Rechte der Nutzer</h2>
+      <h2>8. Meta-Pixel und Conversions API</h2>
+      <p>
+        Um zu messen, ob unsere Werbung auf Facebook und Instagram zu Anfragen f&uuml;hrt,
+        setzen wir den Meta-Pixel der Meta Platforms Ireland Limited (Irland) ein.
+        <strong>Der Pixel wird ausschliesslich nach Ihrer Einwilligung geladen.</strong> Er
+        setzt dann die Cookies <code>_fbp</code> und <code>_fbc</code> und &uuml;bermittelt,
+        welche Seiten Sie aufgerufen haben.
+      </p>
+      <p>
+        Erg&auml;nzend &uuml;bermitteln wir abgesendete Kontakt- und Newsletter-Formulare
+        serverseitig &uuml;ber die Conversions API an Meta. E-Mail-Adresse und Telefonnummer
+        werden dabei ausschliesslich als nicht umkehrbarer SHA-256-Hashwert &uuml;bertragen,
+        nicht im Klartext; IP-Adresse und Browserkennung &uuml;bermitteln wir nicht. Zweck ist
+        allein die Zuordnung einer Anfrage zu einer Anzeige, nicht Ihre Identifizierung.
+      </p>
+      <p>
+        Rechtsgrundlage ist Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, Art. 31 Abs. 1
+        revDSG). Sie k&ouml;nnen sie jederzeit mit Wirkung f&uuml;r die Zukunft &uuml;ber den
+        Link zu den Analyse-Einstellungen am Seitenende widerrufen; der Pixel wird dann nicht
+        mehr geladen. Meta bearbeitet Daten auch in den USA. Einzelheiten in der
+        <a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener">Datenschutzrichtlinie von Meta</a>.
+      </p>
+
+    <h2>9. Rechte der Nutzer</h2>
     <p>
       Sie haben jederzeit das Recht, unentgeltlich Auskunft &uuml;ber Herkunft, Empf&auml;nger und Zweck Ihrer gespeicherten personenbezogenen Daten zu erhalten. Sie haben ausserdem ein Recht auf Berichtigung, Sperrung oder L&ouml;schung dieser Daten.
     </p>
@@ -238,7 +269,7 @@
 
     <hr class="divider">
 
-    <h2>9. Kontakt</h2>
+    <h2>10. Kontakt</h2>
     <p>
       F&uuml;r Fragen zum Datenschutz k&ouml;nnen Sie sich jederzeit an uns wenden:
     </p>

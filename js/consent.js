@@ -152,9 +152,9 @@
     // Reihenfolge zaehlt: erst den Kill-Switch loesen bzw. setzen, dann melden.
     if (state === 'granted') {
       window['ga-disable-' + GA4_ID] = false;
-      gtag('consent', 'update', { analytics_storage: 'granted' });
+      gtag('consent', 'update', { analytics_storage: 'granted', ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted' });
     } else {
-      gtag('consent', 'update', { analytics_storage: 'denied' });
+      gtag('consent', 'update', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
       window['ga-disable-' + GA4_ID] = true;
       clearGoogleCookies();
     }
