@@ -111,13 +111,33 @@
        gtag-Loader: nur so stehen die Consent-Defaults, bevor gtag konfiguriert. -->
   <script src="../js/consent.js"></script>
   <script defer src="../js/meta.js"></script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1EW53WRTNR"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-1EW53WRTNR');
-  </script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-1EW53WRTNR');
+      // gtag.js wiegt 183 KB uebertragen. Bei Ablehnung wurde es bisher trotzdem
+      // geholt und danach vom ga-disable-Kill-Switch stillgelegt. Jetzt kommt es
+      // nur, wenn keine Ablehnung gespeichert ist; wer spaeter zustimmt, bekommt
+      // es ueber am:consent-change sofort nachgereicht.
+      (function () {
+        var geholt = false;
+        function laden() {
+          if (geholt) return;
+          geholt = true;
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-1EW53WRTNR';
+          (document.head || document.documentElement).appendChild(s);
+        }
+        var wahl = null;
+        try { wahl = window.localStorage.getItem('am_consent_analytics'); } catch (e) { /* Privatmodus */ }
+        if (wahl !== 'denied') { laden(); }
+        document.addEventListener('am:consent-change', function (e) {
+          if (e && e.detail && e.detail.state === 'granted') { laden(); }
+        });
+      })();
+    </script>
 </head>
 <body>
   <div class="container">
