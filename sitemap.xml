@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Bis 10.09.2026 fehlten hier /imprint/en/, /agb/ und /agb/en/, obwohl alle drei
+  HTTP 200 liefern und aus dem Footer verlinkt sind.
+
+  /agb/ und /agb/en/ bleiben bewusst DRAUSSEN: beide tragen seit Commit 04595d0
+  <meta name="robots" content="noindex, follow">. Eine noindex-Seite in der Sitemap
+  ist ein Widerspruch, den die Search Console als Fehler meldet ("Gesendete URL
+  als noindex markiert"). Entweder faellt das noindex, dann gehoeren beide hier
+  hinein, oder es bleibt, dann gehoeren sie nicht hinein. Entscheid steht aus.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.amanthos.com/</loc>
-    <lastmod>2026-03-09</lastmod>
+    <lastmod>2026-09-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.amanthos.com/imprint/</loc>
-    <lastmod>2026-03-09</lastmod>
+    <lastmod>2026-09-10</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.amanthos.com/imprint/en/</loc>
+    <lastmod>2026-09-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://www.amanthos.com/privacy/</loc>
-    <lastmod>2026-03-09</lastmod>
+    <lastmod>2026-09-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
