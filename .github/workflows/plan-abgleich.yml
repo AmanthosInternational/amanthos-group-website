@@ -1,0 +1,546 @@
+name: plan-abgleich
+
+# Serverseitiger Teil des Bau-Standards: prüft auf JEDEM Pull Request, ob die Arbeit
+# eines Segment-Branches zum Bauplan passt — Plan-Abgleich in jeder Commit-Message und
+# Datei-Scope des Segments.
+#
+# Davor misst er auf jedem PR, auch ausserhalb von segment/*, Produktiv- und Testzeilen
+# und die Klasse des Diffs (notice, bei mehr als 400 Prod-Zeilen oder hoher Testquote eine
+# warning). Die Messung blockiert nie; die Klasse ist die Grundlage der Auto-Merge-Entscheidung.
+#
+# Die Lehre des Hauses ist belegt: Serverseitig durchgesetzt wirkt, Regeltext wirkt nicht.
+# Die Rebase-Regel stand vier Tage geschrieben und wurde trotzdem gebrochen; erst die
+# serverseitige Abschaltung von Squash hat es beendet. Dieser Check ist die einzige
+# Schicht, die auf jeder Maschine und für jeden greift, Mensch wie Agent.
+#
+# WARUM DIE PRÜFLOGIK INLINE STEHT statt aus dem Repo gelesen zu werden:
+# Das GITHUB_TOKEN eines fremden Repos kann das private claude-mcp-setup nicht
+# auschecken. Ein zusätzlicher Org-PAT wäre ein Secret, das rottet. Der Preis ist eine
+# wörtliche Kopie des Parserkerns aus scripts/bauplan-scope.sh. Gegen deren Drift wacht
+# hooks/tests/test-plan-abgleich-sync.sh: Weicht die Kopie ab, ist die Suite rot. Ohne
+# diesen Guard entstünden zwei Auslegungen des Formats, und genau das soll der Kontrakt
+# verhindern.
+#
+# OFFEN, gehört der Verdrahtung: In diesem Repo läuft bisher KEINE CI, die die Suiten
+# unter hooks/tests/ startet — vor diesem Segment gab es gar kein .github/workflows/.
+# Der Guard ist also scharf, aber nur, wer ihn aufruft. Ein Test-Workflow für dieses
+# Repo ist eine eigene Datei und damit ausserhalb dieses Segments.
+#
+# WARUM DER WORKFLOW IMMER LÄUFT:
+# Ein Required Check, dessen Workflow auf einem PR gar nicht startet, blockiert den Merge
+# dauerhaft mit "Expected — waiting for status". Deshalb gibt es hier KEINE Branch- oder
+# Pfadfilter. Der Workflow läuft immer und endet in Sekunden grün, wenn er nicht
+# zuständig ist (Branch nicht segment/*, oder kein Bauplan mit status 'aktiv' im
+# Head-Tree).
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  plan-abgleich:
+    name: plan-abgleich
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bauplan-Abgleich prüfen
+        shell: bash
+        env:
+          PA_BRANCH: ${{ github.head_ref }}
+          PA_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PA_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PA_ROOT: .
+        run: |
+          # >>> PLAN-ABGLEICH-PRUEFLOGIK >>>
+          # Diese Datei wird von hooks/tests/test-plan-abgleich-sync.sh zwischen den
+          # Markern herausgeschnitten und lokal gegen Fixtures gefahren. Sie darf deshalb
+          # nichts voraussetzen ausser den vier PA_*-Umgebungsvariablen und git.
+          # GITHUB_STEP_SUMMARY ist optional: fehlt die Variable, entfaellt nur die Summary.
+
+          # GitHub startet 'shell: bash' mit '-eo pipefail'. Mit -e wuerde die erste
+          # Zuweisung aus einem Kommando, das absichtlich 1 oder 3 liefert (cmd_find,
+          # cmd_check), den Schritt sofort beenden — und damit fail-open zu fail-closed
+          # verdrehen. Deshalb -e hier ausdruecklich abschalten.
+          set +e
+          set -uo pipefail
+
+          EX_OK=0
+          EX_VIOLATION=1
+          EX_USAGE=2
+          EX_NA=3
+
+          # Was zwischen den KERN-Markern steht, ist eine WÖRTLICHE Kopie aus
+          # scripts/bauplan-scope.sh: der Bereich zwischen den Bannern "Block-Extraktion"
+          # und "Dispatch". Nicht von Hand umformulieren. Ändert sich der Parser dort,
+          # wird diese Kopie nachgezogen, sonst schlägt der Sync-Guard an. Der
+          # Erklärtext gehört ausserhalb der Marker, sonst vergleicht der Guard ihn mit.
+          # >>> BAUPLAN-SCOPE-KERN >>>
+          # ---------------------------------------------------------------- Block-Extraktion
+          #
+          # Liest fenced Code-Blocks mit der Info-Zeile '<typ> <selektor>'.
+          # Einrückung ist erlaubt, weil die Blöcke im Bauplan unter Aufzählungspunkten stehen.
+          #
+          # Blöcke, die mit VIER oder mehr Backticks geöffnet werden, sind per Markdown-Konvention
+          # Verbatim-Beispiele, die selbst Backticks zeigen. Ihr Inhalt wird komplett übersprungen —
+          # sonst liest der Parser die Formatbeispiele in der Doku als echten Scope.
+          #
+          # BEKANNTE GRENZE: Ein Beispiel, das nur in DREI Backticks steht, ist von echtem Inhalt
+          # nicht unterscheidbar und leckt in das Ergebnis. Deshalb schreibt der Kontrakt vor, dass
+          # Beispiele in vier Backticks gehören. Eine echte Fence-Verschachtelung in awk zu bauen
+          # kostet mehr, als der Fall wert ist.
+          #
+          # Zeilenenden: CR wird abgeschnitten, damit CRLF-Dateien nicht stumm ins Leere laufen.
+          extract_block() { # <plan> <typ> <selektor> <kommentare-filtern:1|0>
+            local plan="$1" typ="$2" selektor="$3" filter="${4:-1}"
+            [ -f "$plan" ] || return "$EX_NA"
+
+            awk -v want="$selektor" -v typ="$typ" -v filter="$filter" '
+              function trim(s) { sub(/\r$/, "", s); sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+              # Führende Nullen in Segmentnummern normalisieren: segment=01 und segment=1 sind gleich.
+              function normsel(s,   n) {
+                if (s ~ /^segment=[0-9]+$/) { n = substr(s, 9) + 0; return "segment=" n }
+                return s
+              }
+              {
+                line = trim($0)
+
+                # Verbatim-Beispielblöcke (>= 4 Backticks) vollständig überspringen
+                if (line ~ /^````+/) { verbatim = !verbatim; next }
+                if (verbatim) next
+
+                if (inblock) {
+                  if (line ~ /^```/) { inblock = 0; next }
+                  if (line == "") next
+                  if (filter == 1 && line ~ /^#/) next
+                  print line
+                  next
+                }
+
+                if (line ~ ("^```[ \t]*" typ "[ \t]")) {
+                  sel = line
+                  sub(("^```[ \t]*" typ "[ \t]+"), "", sel)
+                  if (normsel(trim(sel)) == normsel(want)) inblock = 1
+                }
+              }
+            ' "$plan"
+          }
+
+          cmd_files() { # <plan> <segment-nr>
+            local plan="$1" nr="$2" out
+            out="$(extract_block "$plan" "bauplan-scope" "segment=$nr" 1)" || return "$EX_NA"
+            [ -n "$out" ] || return "$EX_NA"
+            printf '%s\n' "$out"
+          }
+
+          cmd_sammelstellen() { # <plan>
+            extract_block "$1" "bauplan-scope" "sammelstellen" 1
+          }
+
+          cmd_criteria() { # <plan> <segment-nr>
+            # Kriterien werden WÖRTLICH ausgegeben (kein Kommentarfilter): '#' kann Teil eines
+            # Kriteriums sein. Segment 1 zitiert sie in seiner Deny-Begründung.
+            local plan="$1" nr="$2" out
+            out="$(extract_block "$plan" "bauplan-kriterien" "segment=$nr" 0)" || return "$EX_NA"
+            [ -n "$out" ] || return "$EX_NA"
+            printf '%s\n' "$out"
+          }
+
+          cmd_status() { # <plan>
+            local plan="$1"
+            [ -f "$plan" ] || return "$EX_NA"
+            # Nur der Frontmatter-Bereich zwischen den ersten beiden '---'-Zeilen.
+            # Ohne diese Begrenzung würde ein 'status: aktiv' irgendwo im Fliesstext ein Dokument
+            # scharf schalten, das gar kein Bauplan ist.
+            awk '
+              { sub(/\r$/, "") }
+              NR == 1 && /^---[ \t]*$/ { infm = 1; next }
+              infm && /^---[ \t]*$/     { exit }
+              infm && /^status:/        { sub(/^status:[ \t]*/, ""); gsub(/[ \t]+$/, ""); print; exit }
+            ' "$plan"
+          }
+
+          cmd_find() { # <repo-root> <plankey>
+            local root="$1" key="$2" f st
+            [ -d "$root" ] || return "$EX_NA"
+            # Das Datumssuffix ist im Glob verankert. Ohne Anker fände der kürzere Schlüssel
+            # 'bau-standard' den Plan 'bauplan-bau-standard-haertung-…' und die Gates setzten
+            # den falschen Plan durch.
+            for f in "$root"/docs/bauplan-"$key"-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md; do
+              [ -f "$f" ] || continue
+              st="$(cmd_status "$f")"
+              if [ "$st" = "aktiv" ]; then
+                printf '%s\n' "$f"
+                return "$EX_OK"
+              fi
+            done
+            return "$EX_NA"
+          }
+
+          # Pfad auf die repo-relative Form bringen, in der die Scope-Blöcke geschrieben sind.
+          # Ohne das lehnt check absolute Pfade ab — und genau die liefert der Tool-Input an das
+          # Edit-Gate. Das wäre fail-closed und würde sich über alle Segmente multiplizieren.
+          normalize_path() { # <pfad> <root|leer>
+            local p="$1" root="${2:-}"
+            if [ -n "$root" ]; then
+              root="${root%/}"
+              case "$p" in "$root"/*) p="${p#"$root"/}" ;; esac
+            fi
+            while :; do
+              case "$p" in ./*) p="${p#./}" ;; *) break ;; esac
+            done
+            printf '%s' "$p"
+          }
+
+          matches_any() { # <pfad> <muster-liste auf stdin-Variable>
+            local datei="$1" liste="$2" pat
+            while IFS= read -r pat; do
+              [ -n "$pat" ] || continue
+              # shellcheck disable=SC2053  # Glob-Vergleich ist hier gewollt
+              if [[ "$datei" == $pat ]]; then return 0; fi
+            done <<< "$liste"
+            return 1
+          }
+
+          cmd_check() { # [--root <dir>] <plan> <segment-nr> <datei>...
+            local root=""
+            if [ "${1:-}" = "--root" ]; then
+              [ $# -ge 2 ] || return "$EX_USAGE"
+              root="$2"; shift 2
+            fi
+            [ $# -ge 3 ] || return "$EX_USAGE"
+
+            local plan="$1" nr="$2"; shift 2
+            [ -f "$plan" ] || return "$EX_NA"
+            [ "$(cmd_status "$plan")" = "aktiv" ] || return "$EX_NA"
+
+            local scope sammel=""
+            scope="$(extract_block "$plan" "bauplan-scope" "segment=$nr" 1)"
+            [ -n "$scope" ] || return "$EX_NA"
+            # K1: Segment 0 (auch 00) legt Registries und Kontrakte an und ist von der
+            # Sammelstellen-Regel ausgenommen. Sein eigener Scope-Block bleibt Pflicht (Exit 3 oben).
+            case "$nr" in
+              ''|*[!0]*) sammel="$(extract_block "$plan" "bauplan-scope" "sammelstellen" 1)" ;;
+            esac
+
+            local roh datei verstoss=0
+            for roh in "$@"; do
+              [ -n "$roh" ] || continue
+              datei="$(normalize_path "$roh" "$root")"
+
+              # Sammelstellen schlagen den Segment-Scope: erst prüfen, immer Verstoss.
+              if matches_any "$datei" "$sammel"; then
+                printf '%s\t(Sammelstelle — gehoert der Verdrahtung)\n' "$datei"
+                verstoss=1
+                continue
+              fi
+
+              if ! matches_any "$datei" "$scope"; then
+                printf '%s\t(ausserhalb des Scopes von Segment %s)\n' "$datei" "$nr"
+                verstoss=1
+              fi
+            done
+
+            [ "$verstoss" = "0" ] && return "$EX_OK"
+            return "$EX_VIOLATION"
+          }
+
+          # K2: fehlende Teile des Plan-Abgleich-Blocks, leer wenn vollstaendig. Der Kopf steht auf
+          # eigener Zeile, die drei Schluessel darunter (docs/bauplan-format.md).
+          abgleich_fehlend() {
+            awk '
+              { sub(/\r$/, "") }
+              /^[ \t]*Plan-Abgleich:[ \t]*$/ { kopf = 1; next }
+              kopf && /^[ \t]*erledigt:/     { e = 1 }
+              kopf && /^[ \t]*offen:/        { o = 1 }
+              kopf && /^[ \t]*abweichung:/   { a = 1 }
+              END {
+                if (!kopf) { print "der Block Plan-Abgleich: fehlt ganz"; exit }
+                s = ""
+                if (!e) s = s " erledigt:"
+                if (!o) s = s " offen:"
+                if (!a) s = s " abweichung:"
+                sub(/^ /, "", s)
+                print s
+              }
+            '
+          }
+
+          cmd_abgleich() { # [<datei>|-]
+            [ $# -le 1 ] || return "$EX_USAGE"
+            local quelle="${1:--}" fehlend
+            if [ "$quelle" = "-" ]; then
+              fehlend="$(abgleich_fehlend)"
+            else
+              [ -f "$quelle" ] && [ -r "$quelle" ] || return "$EX_USAGE"
+              fehlend="$(abgleich_fehlend < "$quelle")"
+            fi
+            [ -n "$fehlend" ] || return "$EX_OK"
+            printf '%s\n' "$fehlend"
+            return "$EX_VIOLATION"
+          }
+
+          # K3 und K4: Pfadklassen. Muster als bash-Glob auf den KLEINGESCHRIEBENEN repo-relativen Pfad,
+          # '*' matcht auch '/'. Die Listen fehlen nur nach oben: im Zweifel prod, nie umgekehrt.
+          klein() { printf '%s' "$1" | LC_ALL=C tr '[:upper:]' '[:lower:]'; }
+
+          ist_test() { # <pfad>
+            case "$1" in
+              tests/*|test/*|__tests__/*|*.test.*|*.spec.*|test_*.py|*_test.py|conftest.py|*/fixtures/*|hooks/tests/*) return 0 ;;
+            esac
+            return 1
+          }
+
+          ist_other() { # <pfad>, K3: zaehlt weder als Produktiv- noch als Testzeile
+            case "$1" in
+              *.md|docs/*|*.lock|package-lock.json|pnpm-lock.yaml|yarn.lock|license*|*.csv|data/*) return 0 ;;
+            esac
+            return 1
+          }
+
+          klasse_von() { # <pfad kleingeschrieben>, setzt KLASSE (K4, erster Treffer gewinnt)
+            case "$1" in
+              migrations/*|*/migrations/*|supabase/*|*/supabase/*|*.sql|*payment*|*charg*|*apaleo*|*flexipass*|*door*|*mail*|*smtp*|*resend*|*whatsapp*|*sms*|.github/workflows/*)
+                KLASSE=prod; return ;;
+            esac
+            case "${1##*/}" in   # Prod-Dateinamen greifen in jeder Tiefe
+              render.yaml|vercel.json|.env*) KLASSE=prod; return ;;
+            esac
+            if ist_test "$1"; then KLASSE=test; return; fi
+            case "$1" in
+              *.md|docs/*|license*|.gitignore|.editorconfig) KLASSE=doku ;;
+              *.yml|*.yaml|*.toml|*.json|*.cfg|*.ini|*.plist*|*.example) KLASSE=config ;;
+              *) KLASSE=code ;;
+            esac
+          }
+
+          cmd_zeilen() { # [--root <dir>] <base> <head>
+            local root="."
+            if [ "${1:-}" = "--root" ]; then
+              [ $# -ge 2 ] || return "$EX_USAGE"
+              root="$2"; shift 2
+            fi
+            [ $# -eq 2 ] || return "$EX_USAGE"
+
+            # -z: Pfade ungequotet; bei Umbenennung ist das Pfadfeld leer, alter und neuer Pfad folgen.
+            # tr macht die Pfade klein, weil alle Muster kleingeschrieben sind.
+            local rec add del pfad n=0 prod=0 prod_add=0 tst=0 other=0
+            while IFS= read -r -d '' rec; do
+              add="${rec%%$'\t'*}"; rec="${rec#*$'\t'}"
+              del="${rec%%$'\t'*}"; pfad="${rec#*$'\t'}"
+              if [ -z "$pfad" ]; then IFS= read -r -d '' pfad; IFS= read -r -d '' pfad; fi
+              case "$add$del" in ''|*[!0-9]*) add=0; del=0 ;; esac   # Binaerdatei: '-'
+              n=$((n + 1))
+              if ist_test "$pfad"; then tst=$((tst + add + del))
+              elif ist_other "$pfad"; then other=$((other + add + del))
+              else prod=$((prod + add + del)); prod_add=$((prod_add + add))
+              fi
+            done < <(git -C "$root" diff --numstat -z -M "$1...$2" 2>/dev/null | LC_ALL=C tr '[:upper:]' '[:lower:]')
+            [ "$n" -gt 0 ] || return "$EX_NA"
+
+            printf 'prod=%s prod_add=%s test=%s other=%s testquote=%s\n' "$prod" "$prod_add" "$tst" "$other" \
+              "$(awk -v t="$tst" -v p="$prod_add" 'BEGIN { if (p == 0) printf "0.00"; else printf "%.2f", t / p }')"
+          }
+
+          cmd_klasse() { # <datei>...
+            local roh datei r rang=-1 gesamt="" KLASSE
+            for roh in "$@"; do
+              [ -n "$roh" ] || continue
+              datei="$(normalize_path "$roh" "")"
+              klasse_von "$(klein "$datei")"
+              printf '%s\t%s\n' "$KLASSE" "$datei"
+              case "$KLASSE" in doku) r=0 ;; config) r=1 ;; test) r=2 ;; code) r=3 ;; *) r=4 ;; esac
+              if [ "$r" -gt "$rang" ]; then rang="$r"; gesamt="$KLASSE"; fi
+            done
+            [ -n "$gesamt" ] || return "$EX_USAGE"
+            printf 'gesamt=%s\n' "$gesamt"
+          }
+
+          # <<< BAUPLAN-SCOPE-KERN <<<
+
+          # ---------------------------------------------------------------- Treiber
+          #
+          # Fail-open in genau vier Fällen, und jeder davon endet GRÜN:
+          #   1. Branch folgt nicht 'segment/<plankey>/<nr>-<slug>'
+          #   2. kein Bauplan zu diesem plankey mit status 'aktiv' im Head-Tree
+          #   3. der aktive Plan kennt dieses Segment nicht
+          #   4. cmd_check meldet Exit 2 (Aufruffehler) — ein eigener Fehler darf keine
+          #      fremde Arbeit stoppen, so steht es in der Exit-Code-Konvention
+          #
+          # Die Messung davor (messe_pr) ist kein fuenfter Fall, sondern nie ein Urteil: Sie
+          # schreibt notice und warning und laesst den Exit-Code in jedem Fall unberuehrt.
+          #
+          # Bekannte Grenze, dieselbe wie bei den lokalen Gates: Wer bewusst auf einem
+          # anders benannten Branch baut, wird nicht erfasst.
+
+          gruen() { printf '::notice title=plan-abgleich::%s\n' "$1"; printf '%s\n' "$1"; exit 0; }
+          rot()   { printf '::error title=plan-abgleich::%s\n' "$1"; }
+
+          BRANCH="${PA_BRANCH:-}"
+          ROOT="${PA_ROOT:-.}"
+          BASE="${PA_BASE_SHA:-}"
+          HEAD="${PA_HEAD_SHA:-}"
+
+          # ---- Messung: Zeilen und Klasse je PR (M19, T10) -----------------------------
+          #
+          # Laeuft VOR der Branch-Pruefung, also auf jedem PR in jedem Repo mit Stub. Zeilen und
+          # Klasse kommen aus dem KERN (cmd_zeilen K3, cmd_klasse K4): eine Klassifikation fuer
+          # PR-Check, Nachpruefung und Auto-Merge-Entscheidung, keine dritte Fassung hier.
+          # Die Messung meldet nur (notice, warning) und aendert den Exit-Code nie. Scheitert sie,
+          # steht "nicht messbar" in der notice, und der Check laeuft weiter (fail-open).
+
+          # notiere <zeile>: als notice ins Log und dieselbe Zeile in die Step-Summary.
+          notiere() {
+            printf '::notice title=plan-abgleich::%s\n' "$1"
+            if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+              printf '%s\n' "$1" 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || true
+            fi
+          }
+
+          messe_pr() {
+            local zeilen rc kl="" kv z gesamt="-" prod=0 quote="0.00" d
+            printf '== Messung: Zeilen und Klasse ==\n'
+            if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
+              notiere "zeilen nicht messbar: Basis oder Head fehlt"
+              return 0
+            fi
+            zeilen="$(cmd_zeilen --root "$ROOT" "$BASE" "$HEAD")"
+            rc=$?
+            if [ "$rc" != "0" ] || [ -z "$zeilen" ]; then
+              notiere "zeilen nicht messbar: cmd_zeilen Exit $rc (kein Diff zwischen Basis und Head)"
+              return 0
+            fi
+
+            # -z: Pfade ungequotet, auch mit Umlauten. --no-renames: eine Umbenennung zaehlt mit
+            # altem und neuem Pfad, denn wer eine Migration verschiebt, beruehrt Prod (K4 fehlt
+            # nur nach oben).
+            MESS_DATEIEN=()
+            while IFS= read -r -d '' d; do
+              if [ -n "$d" ]; then MESS_DATEIEN+=("$d"); fi
+            done < <(git -C "$ROOT" diff --name-only -z --no-renames "$BASE...$HEAD" 2>/dev/null)
+            if [ "${#MESS_DATEIEN[@]}" -gt 0 ]; then
+              kl="$(cmd_klasse "${MESS_DATEIEN[@]}")"
+              case "$kl" in *gesamt=*) gesamt="${kl##*gesamt=}" ;; esac
+            fi
+
+            # shellcheck disable=SC2086  # Wortzerlegung der Zeile 'prod=.. testquote=..' ist gewollt
+            for kv in $zeilen; do
+              case "$kv" in
+                prod=*)      prod="${kv#prod=}" ;;
+                testquote=*) quote="${kv#testquote=}" ;;
+              esac
+            done
+            case "$prod" in ''|*[!0-9]*) prod=0 ;; esac
+
+            notiere "zeilen $zeilen klasse=$gesamt"
+            if [ "$prod" -gt 400 ]; then
+              printf '::warning title=plan-abgleich::400-Zeilen-Regel gerissen (prod=%s): Segment teilen oder Ausnahme im PR benennen\n' "$prod"
+            fi
+            # Ae8: In der Klasse prod ist eine hohe Testquote gewollt, dort warnt nichts.
+            if [ "$gesamt" != "prod" ] && awk -v q="$quote" 'BEGIN { exit !(q + 0 > 3) }'; then
+              printf '::warning title=plan-abgleich::testquote=%s ueber 3 (klasse=%s): Fixtures aus dem Diff, Generator plus Hash, T10\n' "$quote" "$gesamt"
+            fi
+
+            # Klasse je Datei ins Log, damit sichtbar ist, welcher Pfad die Gesamtklasse setzt.
+            # Nur Zeilen '<klasse><TAB><pfad>': Ein Zeilenumbruch im Dateinamen ergaebe sonst
+            # eine eigene Zeile, die der Runner als Workflow-Befehl (::error ...) liest.
+            while IFS= read -r z; do
+              case "$z" in
+                doku$'\t'*|config$'\t'*|test$'\t'*|code$'\t'*|prod$'\t'*) printf '  %s\n' "$z" ;;
+              esac
+            done <<< "$kl"
+            printf '\n'
+          }
+
+          messe_pr
+
+          case "$BRANCH" in
+            segment/*/*) ;;
+            *) gruen "nicht zuständig: Branch '$BRANCH' folgt nicht 'segment/<plankey>/<nr>-<slug>'." ;;
+          esac
+
+          rest="${BRANCH#segment/}"
+          PLANKEY="${rest%%/*}"
+          segteil="${rest#*/}"
+          NR="${segteil%%-*}"
+
+          case "$NR" in
+            ''|*[!0-9]*) gruen "nicht zuständig: '$segteil' beginnt nicht mit einer Segmentnummer." ;;
+          esac
+
+          PLAN="$(cmd_find "$ROOT" "$PLANKEY")"
+          if [ -z "$PLAN" ]; then
+            gruen "nicht zuständig: kein docs/bauplan-$PLANKEY-<YYYY-MM-DD>.md mit status 'aktiv' im Head-Tree."
+          fi
+
+          printf 'Plan:    %s\n' "$PLAN"
+          printf 'Segment: %s\n' "$NR"
+          printf 'Basis:   %s\n' "$BASE"
+          printf 'Head:    %s\n' "$HEAD"
+          printf '\n'
+
+          fehler=0
+
+          # ---- Prüfung 1: Plan-Abgleich-Block in jeder Commit-Message ----------------
+          #
+          # Merge-Commits sind ausgenommen: Ein Merge von main in den Branch trägt keine
+          # eigene Arbeit und könnte den Block nicht sinnvoll führen.
+          printf '== Pruefung 1: Plan-Abgleich in den Commit-Messages ==\n'
+          SHAS="$(git -C "$ROOT" log --no-merges --format=%H "$BASE".."$HEAD" 2>/dev/null)"
+          if [ -z "$SHAS" ]; then
+            printf '  keine eigenen Commits im Bereich %s..%s\n' "$BASE" "$HEAD"
+          fi
+          # Dieselbe Pruefung wie das Commit-Gate: cmd_abgleich aus dem KERN (K2).
+          for sha in $SHAS; do
+            fehlend="$(git -C "$ROOT" log -1 --format=%B "$sha" 2>/dev/null | cmd_abgleich -)"
+            case "$?" in
+              0) printf '  OK  %s\n' "$sha" ;;
+              1) rot "$sha: Plan-Abgleich unvollstaendig: $fehlend"
+                 fehler=1 ;;
+              *) printf '  %s: cmd_abgleich meldete einen Aufruffehler, durchgelassen.\n' "$sha" ;;
+            esac
+          done
+
+          # ---- Prüfung 2: Datei-Scope des Segments -----------------------------------
+          printf '\n== Pruefung 2: Datei-Scope von Segment %s ==\n' "$NR"
+          DATEIEN="$(git -C "$ROOT" diff --name-only "$BASE...$HEAD" 2>/dev/null)"
+          if [ -z "$DATEIEN" ]; then
+            printf '  keine geaenderten Dateien\n'
+          else
+            ARGS=()
+            while IFS= read -r d; do
+              [ -n "$d" ] || continue
+              printf '  geaendert: %s\n' "$d"
+              ARGS+=("$d")
+            done <<< "$DATEIEN"
+
+            if [ "${#ARGS[@]}" -gt 0 ]; then
+              verstoss="$(cmd_check --root "$ROOT" "$PLAN" "$NR" "${ARGS[@]}")"
+              rc=$?
+              case "$rc" in
+                0) printf '  alle Dateien im Scope von Segment %s\n' "$NR" ;;
+                1) while IFS= read -r z; do
+                     [ -n "$z" ] || continue
+                     rot "Scope-Verstoss: $z"
+                   done <<< "$verstoss"
+                   fehler=1 ;;
+                3) printf '  Segment %s hat keinen Scope-Block im Plan — nicht zustaendig.\n' "$NR" ;;
+                *) printf '  cmd_check meldete Exit %s (Aufruffehler) — durchgelassen, nicht blockiert.\n' "$rc" ;;
+              esac
+            fi
+          fi
+
+          printf '\n'
+          if [ "$fehler" = "0" ]; then
+            printf 'plan-abgleich: gruen.\n'
+            exit 0
+          fi
+          printf 'plan-abgleich: ROT. Siehe die ::error-Zeilen oben.\n'
+          exit 1
+          # <<< PLAN-ABGLEICH-PRUEFLOGIK <<<
