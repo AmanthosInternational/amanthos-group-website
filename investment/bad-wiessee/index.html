@@ -212,6 +212,9 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-1EW53WRTNR');
+    // Google Ads (Konto 102-092-8693): misst die Suchkampagne Bad Wiessee. Dieselbe gtag.js-
+    // Bibliothek bedient beide Kennungen, Einwilligung wie bei GA4 ueber consent.js.
+    gtag('config', 'AW-702540316');
     (function () {
       var geholt = false;
       function laden() {
@@ -529,6 +532,8 @@
         try {
           if (typeof window.gtag === 'function') {
             window.gtag('event', 'generate_lead', { interest: 'Bad Wiessee Haus 2' });
+            // Conversion 7771519809 "Bad Wiessee Haus 2 - Unterlagen angefordert", ebenfalls erst nach Zustellung.
+            window.gtag('event', 'conversion', { send_to: 'AW-702540316/hiYKCMH23_kcEJzU_84C' });
           }
           if (typeof window.plausible === 'function') {
             window.plausible('Unterlagen angefordert', { props: { objekt: 'Bad Wiessee Haus 2' } });
