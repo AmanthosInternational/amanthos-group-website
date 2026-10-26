@@ -24,6 +24,6 @@ jobs:
         with:
           node-version: "22"
       - name: node --test
-        run: node --test --test-reporter=spec tests/
+        run: node --test --test-reporter=spec 'tests/*.test.mjs'
       - name: Wortregel
         run: scripts/wortregel.sh
