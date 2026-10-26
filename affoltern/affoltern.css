@@ -1,0 +1,104 @@
+/* Seiten /affoltern/ und /affoltern/en/: Hotelaufenthalt bis 29 Naechte, Amanthos Hotels.
+   Farben und Schrift wie investment/bad-wiessee, damit amanthos.com ein Auftritt bleibt. */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #FAF8F5;
+  --flaeche: #FFFFFF;
+  --text: #2a2c25;
+  --gedaempft: #5f6358;
+  --akzent: #9b4738;
+  --akzent-dunkel: #7d3529;
+  --linie: #E2DDD3;
+  --spalte: 1080px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--akzent); }
+.huelle { max-width: var(--spalte); margin: 0 auto; padding-inline: 1.25rem; }
+
+/* Kopf */
+.kopf { border-bottom: 1px solid var(--linie); }
+.kopf__inhalt { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: .9rem; flex-wrap: wrap; }
+.kopf__marke { font-weight: 600; letter-spacing: .02em; color: var(--text); text-decoration: none; }
+.kopf__marke span { color: var(--gedaempft); font-weight: 400; }
+.sprache { display: flex; gap: .75rem; font-size: .9rem; }
+.sprache a[aria-current="page"] { color: var(--text); font-weight: 600; text-decoration: none; }
+
+/* Einstieg mit Preis zuerst */
+.einstieg { display: grid; gap: 2rem; padding-block: 2rem 2.5rem; }
+@media (min-width: 900px) { .einstieg { grid-template-columns: 1.05fr 1fr; align-items: start; padding-block: 3rem; } }
+.augenbraue { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--akzent); font-weight: 600; }
+h1 { font-size: clamp(1.9rem, 4.5vw, 2.8rem); line-height: 1.15; margin: .4rem 0 1rem; font-weight: 700; }
+.preis { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-bottom: .4rem; }
+.preis__betrag { font-size: clamp(2.4rem, 7vw, 3.4rem); font-weight: 700; color: var(--akzent); line-height: 1; }
+.preis__zusatz { color: var(--gedaempft); }
+.vorspann { font-size: 1.08rem; margin-top: 1rem; }
+.bild-haupt { border-radius: 6px; overflow: hidden; }
+
+/* Abschnitte */
+section { padding-block: 2.5rem; border-top: 1px solid var(--linie); }
+h2 { font-size: 1.5rem; line-height: 1.25; margin-bottom: 1.1rem; }
+.zwei { display: grid; gap: 2rem; }
+@media (min-width: 900px) { .zwei { grid-template-columns: 1fr 1fr; } }
+
+/* Preistabelle */
+.preistabelle { width: 100%; border-collapse: collapse; background: var(--flaeche); border: 1px solid var(--linie); border-radius: 6px; overflow: hidden; }
+.preistabelle th, .preistabelle td { text-align: left; padding: .7rem .9rem; border-bottom: 1px solid var(--linie); vertical-align: top; }
+.preistabelle thead th { font-size: .85rem; color: var(--gedaempft); font-weight: 600; }
+.preistabelle td.zahl { font-weight: 700; white-space: nowrap; }
+.preistabelle tr:last-child td { border-bottom: 0; }
+.klein { font-size: .92rem; color: var(--gedaempft); margin-top: .8rem; }
+
+.fakten { list-style: none; display: grid; gap: .55rem; }
+.fakten li { padding-left: 1.4rem; position: relative; }
+.fakten li::before { content: ''; position: absolute; left: 0; top: .62em; width: .55rem; height: .55rem; border-radius: 50%; background: var(--akzent); }
+
+.galerie { display: grid; gap: .75rem; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 900px) { .galerie { grid-template-columns: repeat(4, 1fr); } }
+.galerie figure { border-radius: 6px; overflow: hidden; }
+.galerie figcaption { font-size: .85rem; color: var(--gedaempft); padding-top: .3rem; }
+
+/* Formular */
+.anfrage { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 8px; padding: 1.4rem; }
+.anfrage h2 { margin-bottom: .4rem; }
+.anfrage__lead { color: var(--gedaempft); margin-bottom: 1rem; }
+.felder { display: grid; gap: .9rem; grid-template-columns: 1fr 1fr; }
+.feld { display: flex; flex-direction: column; gap: .3rem; grid-column: span 2; }
+.feld--halb { grid-column: span 1; }
+@media (max-width: 480px) { .feld--halb { grid-column: span 2; } }
+label { font-size: .9rem; font-weight: 600; }
+label .optional { font-weight: 400; color: var(--gedaempft); }
+input, select {
+  font: inherit; color: inherit; background: var(--bg); width: 100%;
+  border: 1px solid #c9c3b6; border-radius: 6px; padding: .65rem .7rem; min-height: 2.9rem;
+}
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--akzent); outline-offset: 2px; }
+.honig { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.knopf {
+  font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 6px;
+  background: var(--akzent); color: #fff; padding: .85rem 1.4rem; min-height: 3rem; width: 100%; margin-top: .4rem;
+}
+.knopf:hover { background: var(--akzent-dunkel); }
+.knopf[disabled] { opacity: .65; cursor: wait; }
+.knopf--leise { display: inline-block; width: auto; text-decoration: none; text-align: center; }
+.af-hinweis { background: #f3ede4; border-radius: 6px; padding: .6rem .8rem; font-size: .92rem; margin-bottom: .9rem; }
+.af-status { min-height: 1.4rem; margin-top: .7rem; font-size: .95rem; }
+.af-status--fehler { color: #8a1c0f; font-weight: 600; }
+.danke { outline: none; }
+.danke h2 { color: var(--akzent); }
+.danke p { margin-bottom: .8rem; }
+.datenschutz { font-size: .82rem; color: var(--gedaempft); margin-top: .8rem; }
+
+/* Fuss */
+.fuss { border-top: 1px solid var(--linie); padding-block: 2rem 2.5rem; font-size: .9rem; color: var(--gedaempft); }
+.fuss__zeile { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: .8rem; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
