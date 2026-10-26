@@ -2,7 +2,7 @@
 /**
  * Firmenlinks fuer /affoltern/ (Kontrakt K4, docs/bauplan-prize-anfrageseite-2026-10-26.md).
  *
- *   node scripts/firmenlinks.mjs <firmenliste.csv> [--json affoltern/firmen.json] [--links <datei>]
+ *   node scripts/firmenlinks.mjs <firmenliste.csv> [--json affoltern/firmen.json] [--links <datei>] [--alle-neu]
  *
  * Liest die Firmenliste (Spalten nr, firma, email_rolle; amanthos-creative
  * kampagnen/prize-29-naechte-2026-11/firmenliste.csv), erzeugt je Zeile einen neuen Token und
@@ -11,11 +11,15 @@
  *   - die Linkliste (nr,firma,link) AUSSERHALB jedes Repos, Vorgabe
  *     ~/Projects/werbemittel/prize-29n-2026-11/firmenlinks.csv; sie ist der einzige Ort, an dem
  *     Token und Firma zusammen stehen
- * Jeder Lauf ersetzt alle Tokens: alte Links fuellen danach nichts mehr vor (das Formular bleibt
- * trotzdem nutzbar). Node 22, nur WebCrypto, keine Abhaengigkeit.
+ * Bestehende Links bleiben gueltig: liegt die Linkliste schon da, behaelt jede Firma ihren Token
+ * (Schluessel: der Firmenname, ohne Gross- und Kleinschreibung), nur neue Zeilen bekommen einen
+ * neuen. So kann die Firmenliste wachsen, ohne dass versandte Links ihre Vorausfuellung verlieren.
+ * Firmen, die aus der Liste fallen, verlieren ihren Eintrag. `--alle-neu` erzeugt alle Tokens neu
+ * und entwertet damit jeden alten Link (nur bewusst, etwa nach einem Leck der Linkliste).
+ * Node 22, nur WebCrypto, keine Abhaengigkeit.
  */
 import { createRequire } from 'node:module';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -56,19 +60,38 @@ function csvFeld(v) {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-/** {json, links}: firmen.json-Objekt und Zeilen der Linkliste, ohne zu schreiben. */
-export async function erzeugen(firmen) {
+function schluesselVon(firma) {
+  return String(firma || '').trim().toLowerCase();
+}
+
+/** Firma (klein) zu Token aus einer vorhandenen Linkliste (nr,firma,link); kaputte Zeilen fallen weg. */
+export function bestehendeTokens(linkCsv) {
+  const karte = new Map();
+  for (const z of csvZeilen(linkCsv || '')) {
+    const token = String(z.link || '').split('#f=')[1] || '';
+    if (fl.tokenBytes(token) && z.firma) karte.set(schluesselVon(z.firma), token);
+  }
+  return karte;
+}
+
+/**
+ * {json, links, neu}: firmen.json-Objekt und Zeilen der Linkliste, ohne zu schreiben. `bestehend`
+ * (aus bestehendeTokens) behaelt die Tokens bekannter Firmen; `neu` zaehlt die neuen Tokens.
+ */
+export async function erzeugen(firmen, bestehend = new Map()) {
   const eintraege = {};
   const links = [];
+  let neu = 0;
   for (const f of firmen) {
     const firma = String(f.firma || '').trim();
     if (!firma) continue;
     const email = EMAIL_RE.test(String(f.email_rolle || '').trim()) ? f.email_rolle.trim() : '';
-    const token = fl.neuerToken();
+    let token = bestehend.get(schluesselVon(firma));
+    if (!token) { token = fl.neuerToken(); neu++; }
     eintraege[await fl.kennung(token)] = await fl.verschluesseln(token, { firma, email });
     links.push({ nr: f.nr, firma, link: link(token) });
   }
-  return { json: { v: 1, eintraege }, links };
+  return { json: { v: 1, eintraege }, links, neu };
 }
 
 async function main(argv) {
@@ -89,12 +112,14 @@ async function main(argv) {
     console.error('Die Linkliste gehoert nicht ins Repo: sie traegt die Tokens.');
     return 2;
   }
-  const { json, links } = await erzeugen(csvZeilen(readFileSync(quelle, 'utf8')));
+  const bestehend = args.includes('--alle-neu') || !existsSync(linkPfad)
+    ? new Map() : bestehendeTokens(readFileSync(linkPfad, 'utf8'));
+  const { json, links, neu } = await erzeugen(csvZeilen(readFileSync(quelle, 'utf8')), bestehend);
   writeFileSync(jsonPfad, JSON.stringify(json, null, 1) + '\n');
   mkdirSync(dirname(linkPfad), { recursive: true });
   writeFileSync(linkPfad, ['nr,firma,link', ...links.map((l) => [l.nr, l.firma, l.link].map(csvFeld).join(','))].join('\n') + '\n');
   const mitMail = csvZeilen(readFileSync(quelle, 'utf8')).filter((f) => EMAIL_RE.test(String(f.email_rolle || '').trim())).length;
-  console.log(`${links.length} Firmenlinks, davon ${mitMail} mit Rollenadresse; firmen.json ${Object.keys(json.eintraege).length} Eintraege`);
+  console.log(`${links.length} Firmenlinks, davon ${mitMail} mit Rollenadresse; ${links.length - neu} behalten, ${neu} neu; firmen.json ${Object.keys(json.eintraege).length} Eintraege`);
   console.log(`Linkliste: ${linkPfad}`);
   return 0;
 }
