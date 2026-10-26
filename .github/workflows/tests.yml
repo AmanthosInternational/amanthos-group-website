@@ -1,0 +1,29 @@
+# Tests der Seiten /affoltern/ (Plan prize-anfrageseite, Segment 2).
+#
+# Laeuft auf jedem Pull Request und nach jedem Push auf main: node --test ueber tests/ und das
+# Wortregel-Gate ueber affoltern/. Kein package.json, keine Abhaengigkeit, kein Secret: das Repo
+# bleibt ohne node_modules, die Tests brauchen nur Node 22 mit WebCrypto.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: node --test und Wortregel
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: node --test
+        run: node --test --test-reporter=spec tests/
+      - name: Wortregel
+        run: scripts/wortregel.sh
