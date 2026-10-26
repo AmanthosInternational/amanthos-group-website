@@ -122,7 +122,7 @@ jobs:
       - name: axe-Scan
         env:
           NODE_PATH: ${{ runner.temp }}/a11y/node_modules
-        run: node .github/scripts/axe.cjs "https://www.amanthos.com/" "https://www.amanthos.com/agb/" "https://www.amanthos.com/agb/en/" "https://www.amanthos.com/privacy/" "https://www.amanthos.com/imprint/" "https://www.amanthos.com/imprint/en/"
+        run: node .github/scripts/axe.cjs "https://www.amanthos.com/" "https://www.amanthos.com/agb/" "https://www.amanthos.com/agb/en/" "https://www.amanthos.com/privacy/" "https://www.amanthos.com/imprint/" "https://www.amanthos.com/imprint/en/" "https://www.amanthos.com/affoltern/" "https://www.amanthos.com/affoltern/en/"
 
   gsc:
     name: Search-Console-Verifikation
