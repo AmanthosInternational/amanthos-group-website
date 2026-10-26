@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { readFileSync, existsSync } from 'node:fs';
-import { csvZeilen, erzeugen, link, UTM } from '../scripts/firmenlinks.mjs';
+import { csvZeilen, erzeugen, bestehendeTokens, link, UTM } from '../scripts/firmenlinks.mjs';
 
 const require = createRequire(import.meta.url);
 const fl = require('../affoltern/js/affoltern-firmenlink.js');
@@ -42,7 +42,7 @@ test('je Zeile ein Eintrag, Token 22 Zeichen, kein Klartext im JSON', async () =
   assert.equal(kaputt.email, '', 'ungueltige Rollenadresse faellt weg');
 });
 
-test('jeder Lauf erzeugt neue Tokens', async () => {
+test('ohne Linkliste erzeugt jeder Lauf neue Tokens', async () => {
   const a = await erzeugen(csvZeilen(CSV));
   const b = await erzeugen(csvZeilen(CSV));
   assert.notEqual(a.links[0].link, b.links[0].link);
@@ -59,4 +59,19 @@ test('firmen.json im Repo ist gueltig und ohne Klartext', () => {
   assert.ok(ids.every((k) => /^[0-9a-f]{32}$/.test(k)));
   assert.ok(Object.values(j.eintraege).every((v) => /^[A-Za-z0-9_-]+$/.test(v)));
   assert.ok(!readFileSync(pfad, 'utf8').includes('@'));
+});
+
+test('mit Linkliste behalten bekannte Firmen ihren Token, nur neue bekommen einen', async () => {
+  const erst = await erzeugen(csvZeilen(CSV));
+  const liste = ['nr,firma,link', ...erst.links.map((l) => `${l.nr},"${l.firma.replace(/"/g, '""')}",${l.link}`)].join('\n');
+  const gross = CSV + '\n4,Neue Firma AG,Bau,Zug,,neu@example.invalid';
+  const zweit = await erzeugen(csvZeilen(gross), bestehendeTokens(liste));
+  assert.equal(zweit.neu, 1);
+  assert.deepEqual(zweit.links.slice(0, 3).map((l) => l.link), erst.links.map((l) => l.link));
+  // Ein alter Link fuellt mit der neuen firmen.json weiter vor.
+  const altToken = erst.links[0].link.split('#f=')[1];
+  assert.equal((await fl.entschluesseln(altToken, zweit.json.eintraege)).firma, 'Testbau AG');
+  assert.equal(Object.keys(zweit.json.eintraege).length, 4);
+  // Gross- und Kleinschreibung des Namens zaehlt nicht, kaputte Zeilen fallen weg.
+  assert.equal(bestehendeTokens(liste + '\n9,TESTBAU AG,kein-link').get('testbau ag'), altToken);
 });
