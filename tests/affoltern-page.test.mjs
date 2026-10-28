@@ -97,13 +97,15 @@ test('leadEvents ohne Einwilligung: kein fbq, kein Ads-Aufruf', () => {
 test('leadEvents mit Einwilligung: fbq Lead mit derselben event_id, Ads nur mit ADS_SEND_TO', () => {
   const w = fenster('granted');
   const p = page.buildPayload(eingabe(), CFG);
-  page.leadEvents(p, CFG, w);
+  page.leadEvents(p, { ...CFG, ADS_SEND_TO: '' }, w);
   const fbq = w.calls.find((c) => c[0] === 'fbq');
   assert.deepEqual(fbq, ['fbq', 'track', 'Lead', { content_name: 'affoltern-29n' }, { eventID: 'abcdef12-3456' }]);
-  assert.equal(w.calls.filter((c) => c[2] === 'conversion').length, 0);
+  assert.equal(w.calls.filter((c) => c[2] === 'conversion').length, 0, 'ohne Label kein Ads-Aufruf');
   const w2 = fenster('granted');
-  page.leadEvents(p, { ...CFG, ADS_SEND_TO: 'AW-1/x' }, w2);
-  assert.equal(w2.calls.filter((c) => c[2] === 'conversion').length, 1);
+  page.leadEvents(p, CFG, w2);
+  assert.deepEqual(w2.calls.filter((c) => c[2] === 'conversion'), [
+    ['gtag', 'event', 'conversion', { send_to: 'AW-702540316/wmccCMWW4qwdEJzU_84C' }],
+  ]);
 });
 
 test('Firmenlink-Roundtrip: Generator verschluesselt, Seite entschluesselt', async () => {

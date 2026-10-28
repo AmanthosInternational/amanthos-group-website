@@ -13,8 +13,10 @@
  * Stadt schriftlich bestaetigt; nie ohne Bogdan umlegen. Das Backend traegt denselben Schalter
  * (contact_affoltern.NAECHTE_89_AKTIV) und verwirft die Werte unabhaengig davon.
  *
- * ADS_SEND_TO bleibt leer, bis es eine eigene Conversion-Aktion fuer diese Seiten gibt. Leer
- * heisst: kein Ads-Conversion-Aufruf, GA4, Meta und Plausible zaehlen trotzdem.
+ * ADS_SEND_TO ist das Label der eigenen Conversion-Aktion "Prize Affoltern 29N - Anfrage
+ * (Formular)" (Konto 102-092-8693, angelegt 28.10.2026, Lead-Formular, eine je Klick). Das
+ * Seitenskript ruft sie nur nach einer Antwort 200 und nur mit Einwilligung auf. Leer hiesse: kein
+ * Ads-Conversion-Aufruf, GA4, Meta und Plausible zaehlen trotzdem.
  *
  * API_BASE prueft auf typeof ... === 'string' statt auf den Wahrheitswert: ein Test kann
  * window.AMANTHOS_API_BASE auf den leeren String setzen (gleiche Origin).
@@ -31,7 +33,7 @@
     PAGE_URL_EN: 'https://www.amanthos.com/affoltern/en/',
     GA4_ID: 'G-1EW53WRTNR',
     ADS_ID: 'AW-702540316',
-    ADS_SEND_TO: '',
+    ADS_SEND_TO: 'AW-702540316/wmccCMWW4qwdEJzU_84C',
     CONTENT_NAME: 'affoltern-29n',
     CAL_LINK: 'https://cal.com/team/amanthos/affoltern-rueckruf',
     PHONE: '+41 43 217 86 87',
