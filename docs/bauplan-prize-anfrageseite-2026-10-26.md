@@ -133,3 +133,54 @@ Freigabe Plan und status aktiv: Bogdan 26.10.2026 per AskUserQuestion.
 6. "Senden als hotel@amanthos.com" im Postfach von `SMTP_USER` eingerichtet (Prize-Plan Frage 5)? Blockiert Verdrahtung Schritt 1 (Probe), nicht den Bau.
 7. Startseiten-Link Affoltern auf `/affoltern/` statt radissonhotels.com (ILA)? Blockiert nichts, `index.html` bleibt unberuehrt bis zum Ja.
 8. Testzeilen in `grenchen_leads` nach dem Testlead loeschen (SQL im Prod-Projekt)? Blockiert Verdrahtung Schritt 3 Abschluss, nicht den Bau.
+
+## Nachtrag 1 (30.10.2026): 29 bis 89 Naechte
+
+Grundlage: Mail Stadt Affoltern am Albis 29.10.2026 (Hotelnutzung bis 89 Naechte ohne Wohnsitz), amanthos-tax PR #604,
+Kampagne seit 29.10. live auf 29 bis 89 (amanthos-creative PR #74, UMSTELLUNG-89.md). Entscheide Bogdan 30.10.2026
+(AskUserQuestion): umstellen mit Staffel; Naechte als freie Zahl 29 bis 89, "kuerzer" bleibt mit Preis auf Anfrage;
+im Fenster mit hoechstens 88 Naechten gilt 10 % auch fuer 88; Seite nennt Bettwaeschewechsel woechentlich und
+Zwischenreinigung alle 14 Tage. Firmenlink-Tokens unveraendert. Branches `feature/affoltern-89-naechte` je Repo, ein PR
+je Repo, FL-3, Handmerge nach Freigabe; Backend zuerst.
+
+**K3 v2 (hotel_briefe):** `MIN_NAECHTE 29`, `MAX_NAECHTE 89`, `STAFFEL ((89, 0.10), (59, 0.05))`, `PFLICHTZUSATZ`
+de/en ("Hoechstens 89 Naechte je Gast in 12 Monaten. Keine Wohnsitznahme, keine Anmeldung beim Einwohneramt."; einzige
+erlaubte Stelle fuer den Stamm "wohn" in einem Brief). `max_naechte(anreise_iso)`: Tage bis zum gleichen Kalendertag
+drei Monate spaeter (Tag geklemmt) minus 1, hoechstens 89. `rabatt(naechte, anreise_iso)`: 0.10 ab 89 oder bei 88 =
+max_naechte, 0.05 ab 59, sonst 0. `berechnen(anreise, zimmer, personen=1, naechte=29)`: naechte ganzzahlig
+29..max_naechte, sonst None; `zimmerpreis = round5(basis * naechte / 29 * (1 - rabatt))`, basis wie bisher (Saison,
+zu zweit +290, Firmenpreis ab 5 Zimmern); `gesamt = round5(zimmer * zimmerpreis)`; neu im Ergebnis `rabatt_prozent`.
+`chf()` ohne Dezimalen bei ganzen Betraegen, sonst zwei. `offerte` nennt Naechte, Preis, Staffel-Satz (wenn < 89),
+Pflichtzusatz statt "Anmeldung bei der Gemeinde". `angebot`/`BETREFF` (Meta): "29 bis 89 Naechte", Preis fuer 29,
+Staffel-Satz, Pflichtzusatz; keine neue Feldzuordnung fuer das neue Meta-Formular (Naechte-Frage), bewusst.
+Pinnwerte: 89 Naechte Winter 1 Person CHF 4'391.70 (Preisblatt UMSTELLUNG-89.md Punkt 3).
+
+**K1 v2 (contact_affoltern):** `NAECHTE_89_AKTIV` entfaellt; `nights` = `kuerzer` oder 29..89, ueber
+`max_naechte(arrival)` wird auf das Maximum geklemmt (Lead geht nie verloren); Fusszeile "29 bis 89 Naechte".
+
+**K5 v2 (Seite):** `NIGHTS_MIN 29`, `NIGHTS_MAX 89`, Zahlenfeld `af-nights` (min/max je Anreise, Vorgabe 29) plus
+Kasten `af-nights-shorter` ("Kuerzer als 29 Naechte, Preis auf Anfrage" -> `kuerzer`); Texte "29 bis 89 Naechte",
+Staffel-Satz, Beispiel 89 Naechte mit den Pinnwerten, Pflichtzusatz, Reinigungszeile; Wortregel sperrt statt
+"woechentlich"/"weekly"/"jede Woche" nur noch "Reinigung jede Woche", "woechentliche Reinigung", "weekly cleaning",
+"cleaning every week"; "Wohnsitz" bleibt als ganzes Wort gesperrt (Wohnsitznahme erlaubt, nur im Pflichtzusatz).
+
+```bauplan-scope segment=3
+website-backend/hotel_briefe.py
+website-backend/contact_affoltern.py
+website-backend/lead_fakten.py
+website-backend/tests/test_hotel_briefe.py
+website-backend/tests/test_contact_affoltern.py
+website-backend/tests/test_lead_affoltern.py
+website-backend/tests/test_affoltern_web_verdrahtung.py
+affoltern/*
+scripts/wortregel.sh
+tests/*
+docs/bauplan-prize-anfrageseite-2026-10-26.md
+```
+
+```bauplan-kriterien segment=3
+- [ ] Rot zuerst: berechnen mit naechte 45/59/88/89 und max_naechte fuer 31.01., 01.02., 28.02., 01.03.2027, 01.11.2026; 89 Winter = 4'391.70
+- [ ] Meta-Brief und Offerte: 0 Sperrwoerter (Woerter; Stamm "wohn" nur im Pflichtzusatz), 29 bis 89, Pflichtzusatz genau einmal
+- [ ] parse: 45 kommt durch, 90 faellt, 89 bei Anreise 15.02. wird 88; Verdrahtungstest mit 59 Naechten nennt den Staffelpreis
+- [ ] Seite DE/EN: node --test gruen, wortregel 0 Treffer, Pflichtzusatz einmal, Zahlenfeld 29..89, Firmenlink fuellt weiter vor
+```
