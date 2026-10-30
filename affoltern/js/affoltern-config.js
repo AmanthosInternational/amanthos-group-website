@@ -9,9 +9,11 @@
  * steht nach Entscheid Bogdan (26.10.2026) nur in der Antwort per Mail, nie auf der Seite.
  * Gerechnet wird im Backend (hotel_briefe.berechnen); hier steht nur, was die Seite zeigt.
  *
- * NIGHTS_89_ENABLED ist der Schalter fuer Aufenthalte von 30 bis 89 Naechten. Aus, bis die
- * Stadt schriftlich bestaetigt; nie ohne Bogdan umlegen. Das Backend traegt denselben Schalter
- * (contact_affoltern.NAECHTE_89_AKTIV) und verwirft die Werte unabhaengig davon.
+ * NIGHTS_MIN bis NIGHTS_MAX: 29 bis 89 Naechte seit der schriftlichen Bestaetigung der Stadt vom
+ * 29.10.2026 (Nachtrag 1 des Plans). Die Obergrenze je Anreise (Aufenthalt endet vor dem gleichen
+ * Kalendertag drei Monate spaeter) rechnet das Seitenskript wie das Backend (hotel_briefe.max_naechte).
+ * Die Staffel (ab 59 Naechten 5 %, 89 Naechte 10 %) steht als Text auf der Seite, gerechnet wird im
+ * Backend.
  *
  * ADS_SEND_TO ist das Label der eigenen Conversion-Aktion "Prize Affoltern 29N - Anfrage
  * (Formular)" (Konto 102-092-8693, angelegt 28.10.2026, Lead-Formular, eine je Klick). Das
@@ -39,9 +41,8 @@
     PHONE: '+41 43 217 86 87',
     PHONE_HREF: 'tel:+41432178687',
     EMAIL: 'hotel@amanthos.com',
-    NIGHTS_MAX: 29,
-    NIGHTS_89_ENABLED: false,
-    NIGHTS_LONG: [30, 45, 60, 75, 89],
+    NIGHTS_MIN: 29,
+    NIGHTS_MAX: 89,
     ROOMS_MAX: 30,
     ARRIVAL_DAYS: 365,
     FIRMEN_JSON: '/affoltern/firmen.json',

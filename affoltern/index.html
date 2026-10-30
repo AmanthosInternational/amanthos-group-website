@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hotelzimmer bis 29 Nächte in Affoltern am Albis | Amanthos Hotels</title>
-  <meta name="description" content="Hotelzimmer in Affoltern am Albis für bis zu 29 Nächte: 1 Person CHF 1'590, zu zweit CHF 1'880 bei Anreise bis Ende Februar, inklusive MWST. Bahnhof 4 Gehminuten, Zürich HB 28 Minuten.">
+  <title>Hotelzimmer für 29 bis 89 Nächte in Affoltern am Albis | Amanthos Hotels</title>
+  <meta name="description" content="Hotelzimmer in Affoltern am Albis für 29 bis 89 Nächte: ab CHF 1'590 für 29 Nächte, ab 59 Nächten 5 % günstiger, 89 Nächte 10 % günstiger, inklusive MWST. Bahnhof 4 Gehminuten, Zürich HB 28 Minuten.">
   <link rel="canonical" href="https://www.amanthos.com/affoltern/">
   <link rel="alternate" hreflang="de" href="https://www.amanthos.com/affoltern/">
   <link rel="alternate" hreflang="en" href="https://www.amanthos.com/affoltern/en/">
   <link rel="alternate" hreflang="x-default" href="https://www.amanthos.com/affoltern/">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Hotelzimmer bis 29 Nächte in Affoltern am Albis: CHF 1'590">
+  <meta property="og:title" content="Hotelzimmer für 29 bis 89 Nächte in Affoltern am Albis: ab CHF 1'590">
   <meta property="og:description" content="Für Einsatz, Projekt oder Umbau. Preis inklusive MWST, Anreise ab sofort, Bahnhof 4 Gehminuten.">
   <meta property="og:url" content="https://www.amanthos.com/affoltern/">
   <meta property="og:image" content="https://www.amanthos.com/images/affoltern/zimmer-1600.webp">
@@ -88,11 +88,11 @@
 <main>
   <div class="huelle einstieg">
     <div>
-      <p class="augenbraue">Hotelaufenthalt bis 29 Nächte</p>
+      <p class="augenbraue">Hotelaufenthalt 29 bis 89 Nächte</p>
       <h1>Ihr Hotelzimmer in Affoltern am Albis</h1>
       <p class="preis"><span class="preis__betrag">CHF 1'590</span> <span class="preis__zusatz">für 29 Nächte, 1 Person, inklusive MWST</span></p>
-      <p class="preis__zusatz">Bei Anreise bis Ende Februar. Zu zweit CHF 1'880.</p>
-      <p class="vorspann">Für Einsatz, Projekt oder Umbau: ein Hotelzimmer mit Rezeption, WLAN und Frühstück auf Wunsch, 4 Gehminuten vom Bahnhof. Zürich HB erreichen Sie in 28 Minuten, Zug in 16 Minuten. Die Anreise ist ab sofort möglich.</p>
+      <p class="preis__zusatz">Bei Anreise bis Ende Februar. Zu zweit CHF 1'880. Ab 59 Nächten 5 % günstiger, 89 Nächte 10 % günstiger.</p>
+      <p class="vorspann">Für Einsatz, Projekt oder Umbau: ein Hotelzimmer für 29 bis 89 Nächte, mit Rezeption, WLAN und Frühstück auf Wunsch, 4 Gehminuten vom Bahnhof. Zürich HB erreichen Sie in 28 Minuten, Zug in 16 Minuten. Die Anreise ist ab sofort möglich.</p>
       <div class="bild-haupt" style="margin-top:1.4rem">
         <picture>
           <source type="image/webp" media="(max-width: 700px)" srcset="/images/affoltern/zimmer-960.webp">
@@ -112,11 +112,9 @@
             <input type="date" id="af-arrival" name="arrival" required>
           </div>
           <div class="feld feld--halb">
-            <label for="af-nights">Nächte</label>
-            <select id="af-nights" name="nights">
-              <option value="29" selected>29 Nächte</option>
-              <option value="kuerzer">Kürzer als 29 Nächte (Preis auf Anfrage)</option>
-            </select>
+            <label for="af-nights">Nächte <span class="optional">(29 bis 89)</span></label>
+            <input type="number" id="af-nights" name="nights" inputmode="numeric" min="29" max="89" step="1" value="29">
+            <label class="kasten"><input type="checkbox" id="af-nights-shorter" name="nights_shorter"> Kürzer als 29 Nächte (Preis auf Anfrage)</label>
           </div>
           <div class="feld feld--halb">
             <label for="af-rooms">Zimmer</label>
@@ -170,15 +168,22 @@
   <section>
     <div class="huelle zwei">
       <div>
-        <h2>Preise für 29 Nächte</h2>
+        <h2>Preise</h2>
         <table class="preistabelle">
-          <thead><tr><th scope="col">Anreise</th><th scope="col">1 Person</th><th scope="col">Zu zweit</th></tr></thead>
+          <thead><tr><th scope="col">29 Nächte, Anreise</th><th scope="col">1 Person</th><th scope="col">Zu zweit</th></tr></thead>
           <tbody>
             <tr><td>November bis Februar</td><td class="zahl">CHF 1'590</td><td class="zahl">CHF 1'880</td></tr>
             <tr><td>März bis Oktober</td><td class="zahl">CHF 1'890</td><td class="zahl">CHF 2'180</td></tr>
           </tbody>
         </table>
-        <p class="klein">Je Zimmer, inklusive MWST. Der Anreisetag bestimmt den Preis des ganzen Aufenthalts. Frühstück CHF 12 je Tag, Tiefgarage CHF 20 je Tag. Kürzere Aufenthalte auf Anfrage. Für Firmen ab 5 Zimmern gibt es einen Firmenpreis, den Sie mit der Antwort auf Ihre Anfrage erhalten.</p>
+        <table class="preistabelle" style="margin-top:.8rem">
+          <thead><tr><th scope="col">89 Nächte (10 % günstiger), Anreise</th><th scope="col">1 Person</th><th scope="col">Zu zweit</th></tr></thead>
+          <tbody>
+            <tr><td>November bis Februar</td><td class="zahl">CHF 4'391.70</td><td class="zahl">CHF 5'192.70</td></tr>
+            <tr><td>März bis Oktober</td><td class="zahl">CHF 5'220.30</td><td class="zahl">CHF 6'021.30</td></tr>
+          </tbody>
+        </table>
+        <p class="klein">Je Zimmer, inklusive MWST. Zwischen 29 und 89 Nächten anteilig je Nacht, ab 59 Nächten 5 % günstiger, 89 Nächte 10 % günstiger. Der Anreisetag bestimmt den Preis des ganzen Aufenthalts. Frühstück CHF 12 je Tag, Tiefgarage CHF 20 je Tag. Kürzere Aufenthalte auf Anfrage. Für Firmen ab 5 Zimmern gibt es einen Firmenpreis, den Sie mit der Antwort auf Ihre Anfrage erhalten.</p>
       </div>
       <div>
         <h2>Gut zu wissen</h2>
@@ -186,9 +191,9 @@
           <li>Obstgartenstrasse 7, 8910 Affoltern am Albis</li>
           <li>Bahnhof Affoltern am Albis 4 Gehminuten, Zürich HB 28 Minuten, Zug 16 Minuten</li>
           <li>Rezeption, WLAN, Frühstück auf Wunsch, Tiefgarage im Haus</li>
-          <li>Zwischenreinigung alle 14 Tage</li>
+          <li>Bettwäschewechsel wöchentlich, Zwischenreinigung alle 14 Tage</li>
           <li>Anreise ab sofort möglich, die Rezeption bestätigt Ihnen das Datum</li>
-          <li>Der Aufenthalt wird im Voraus bezahlt. Eine Anmeldung bei der Gemeinde ist nicht möglich.</li>
+          <li>Der Aufenthalt wird im Voraus bezahlt. Höchstens 89 Nächte je Gast in 12 Monaten. Keine Wohnsitznahme, keine Anmeldung beim Einwohneramt.</li>
         </ul>
       </div>
     </div>

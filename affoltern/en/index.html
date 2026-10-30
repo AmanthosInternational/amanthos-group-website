@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hotel room for up to 29 nights in Affoltern am Albis | Amanthos Hotels</title>
-  <meta name="description" content="Hotel room in Affoltern am Albis for up to 29 nights: 1 person CHF 1'590, two persons CHF 1'880 for an arrival until the end of February, VAT included. Station 4 minutes on foot, Zurich main station 28 minutes.">
+  <title>Hotel room for 29 to 89 nights in Affoltern am Albis | Amanthos Hotels</title>
+  <meta name="description" content="Hotel room in Affoltern am Albis for 29 to 89 nights: from CHF 1'590 for 29 nights, 5 % off from 59 nights, 10 % off for 89 nights, VAT included. Station 4 minutes on foot, Zurich main station 28 minutes.">
   <link rel="canonical" href="https://www.amanthos.com/affoltern/en/">
   <link rel="alternate" hreflang="de" href="https://www.amanthos.com/affoltern/">
   <link rel="alternate" hreflang="en" href="https://www.amanthos.com/affoltern/en/">
   <link rel="alternate" hreflang="x-default" href="https://www.amanthos.com/affoltern/">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Hotel room for up to 29 nights in Affoltern am Albis: CHF 1'590">
+  <meta property="og:title" content="Hotel room for 29 to 89 nights in Affoltern am Albis: from CHF 1'590">
   <meta property="og:description" content="For an assignment, a project or a renovation. VAT included, arrival as of now, station 4 minutes on foot.">
   <meta property="og:url" content="https://www.amanthos.com/affoltern/en/">
   <meta property="og:image" content="https://www.amanthos.com/images/affoltern/zimmer-1600.webp">
@@ -88,11 +88,11 @@
 <main>
   <div class="huelle einstieg">
     <div>
-      <p class="augenbraue">Hotel stay of up to 29 nights</p>
+      <p class="augenbraue">Hotel stay of 29 to 89 nights</p>
       <h1>Your hotel room in Affoltern am Albis</h1>
       <p class="preis"><span class="preis__betrag">CHF 1'590</span> <span class="preis__zusatz">for 29 nights, 1 person, VAT included</span></p>
-      <p class="preis__zusatz">For an arrival until the end of February. Two persons CHF 1'880.</p>
-      <p class="vorspann">For an assignment, a project or a renovation: a hotel room with reception, Wi-Fi and breakfast on request, 4 minutes on foot from the station. Zurich main station is 28 minutes away, Zug 16 minutes. Arrival is possible as of now.</p>
+      <p class="preis__zusatz">For an arrival until the end of February. Two persons CHF 1'880. 5 % off from 59 nights, 10 % off for 89 nights.</p>
+      <p class="vorspann">For an assignment, a project or a renovation: a hotel room for 29 to 89 nights, with reception, Wi-Fi and breakfast on request, 4 minutes on foot from the station. Zurich main station is 28 minutes away, Zug 16 minutes. Arrival is possible as of now.</p>
       <div class="bild-haupt" style="margin-top:1.4rem">
         <picture>
           <source type="image/webp" media="(max-width: 700px)" srcset="/images/affoltern/zimmer-960.webp">
@@ -112,11 +112,9 @@
             <input type="date" id="af-arrival" name="arrival" required>
           </div>
           <div class="feld feld--halb">
-            <label for="af-nights">Nights</label>
-            <select id="af-nights" name="nights">
-              <option value="29" selected>29 nights</option>
-              <option value="kuerzer">Fewer than 29 nights (price on request)</option>
-            </select>
+            <label for="af-nights">Nights <span class="optional">(29 to 89)</span></label>
+            <input type="number" id="af-nights" name="nights" inputmode="numeric" min="29" max="89" step="1" value="29">
+            <label class="kasten"><input type="checkbox" id="af-nights-shorter" name="nights_shorter"> Fewer than 29 nights (price on request)</label>
           </div>
           <div class="feld feld--halb">
             <label for="af-rooms">Rooms</label>
@@ -170,15 +168,22 @@
   <section>
     <div class="huelle zwei">
       <div>
-        <h2>Prices for 29 nights</h2>
+        <h2>Prices</h2>
         <table class="preistabelle">
-          <thead><tr><th scope="col">Arrival</th><th scope="col">1 person</th><th scope="col">2 persons</th></tr></thead>
+          <thead><tr><th scope="col">29 nights, arrival</th><th scope="col">1 person</th><th scope="col">2 persons</th></tr></thead>
           <tbody>
             <tr><td>November to February</td><td class="zahl">CHF 1'590</td><td class="zahl">CHF 1'880</td></tr>
             <tr><td>March to October</td><td class="zahl">CHF 1'890</td><td class="zahl">CHF 2'180</td></tr>
           </tbody>
         </table>
-        <p class="klein">Per room, VAT included. The day of arrival sets the price of the whole stay. Breakfast CHF 12 per day, underground parking CHF 20 per day. Shorter stays on request. Companies booking 5 rooms or more get a company price with the answer to their enquiry.</p>
+        <table class="preistabelle" style="margin-top:.8rem">
+          <thead><tr><th scope="col">89 nights (10 % off), arrival</th><th scope="col">1 person</th><th scope="col">2 persons</th></tr></thead>
+          <tbody>
+            <tr><td>November to February</td><td class="zahl">CHF 4'391.70</td><td class="zahl">CHF 5'192.70</td></tr>
+            <tr><td>March to October</td><td class="zahl">CHF 5'220.30</td><td class="zahl">CHF 6'021.30</td></tr>
+          </tbody>
+        </table>
+        <p class="klein">Per room, VAT included. Between 29 and 89 nights pro rata per night, 5 % off from 59 nights, 10 % off for 89 nights. The day of arrival sets the price of the whole stay. Breakfast CHF 12 per day, underground parking CHF 20 per day. Shorter stays on request. Companies booking 5 rooms or more get a company price with the answer to their enquiry.</p>
       </div>
       <div>
         <h2>Good to know</h2>
@@ -186,9 +191,9 @@
           <li>Obstgartenstrasse 7, 8910 Affoltern am Albis</li>
           <li>Affoltern am Albis station 4 minutes on foot, Zurich main station 28 minutes, Zug 16 minutes</li>
           <li>Reception, Wi-Fi, breakfast on request, underground parking in the building</li>
-          <li>Room cleaning every 14 days</li>
+          <li>Bedding changed weekly, room cleaning every 14 days</li>
           <li>Arrival possible as of now; the reception confirms the date with you</li>
-          <li>The stay is paid in advance. Registration with the municipality is not possible.</li>
+          <li>The stay is paid in advance. A maximum of 89 nights per guest within 12 months. No taking up of residence, no registration with the residents' registration office.</li>
         </ul>
       </div>
     </div>
