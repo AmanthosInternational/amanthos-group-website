@@ -152,7 +152,7 @@ max_naechte, 0.05 ab 59, sonst 0. `berechnen(anreise, zimmer, personen=1, naecht
 zu zweit +290, Firmenpreis ab 5 Zimmern); `gesamt = round5(zimmer * zimmerpreis)`; neu im Ergebnis `rabatt_prozent`.
 `chf()` ohne Dezimalen bei ganzen Betraegen, sonst zwei. `offerte` nennt Naechte, Preis, Staffel-Satz (wenn < 89),
 Pflichtzusatz statt "Anmeldung bei der Gemeinde". `angebot`/`BETREFF` (Meta): "29 bis 89 Naechte", Preis fuer 29,
-Staffel-Satz, Pflichtzusatz; keine neue Feldzuordnung fuer das neue Meta-Formular (Naechte-Frage), bewusst.
+Staffel-Satz, Pflichtzusatz; Echo der Naechte-Frage der Meta-Formulare seit 29.10. (Schluessel `naechte`: n29_58, n59_88, n89, vom Dispatcher am 30.10. aus dem Graph gelesen) ueber `NAECHTE_STUFEN`, nur Label, nie Rohwert.
 Pinnwerte: 89 Naechte Winter 1 Person CHF 4'391.70 (Preisblatt UMSTELLUNG-89.md Punkt 3).
 
 **K1 v2 (contact_affoltern):** `NAECHTE_89_AKTIV` entfaellt; `nights` = `kuerzer` oder 29..89, ueber
@@ -168,6 +168,8 @@ Staffel-Satz, Beispiel 89 Naechte mit den Pinnwerten, Pflichtzusatz, Reinigungsz
 website-backend/hotel_briefe.py
 website-backend/contact_affoltern.py
 website-backend/lead_fakten.py
+website-backend/lead_meta_anfrage.py
+website-backend/lead_antwort_texte.py
 website-backend/tests/test_hotel_briefe.py
 website-backend/tests/test_contact_affoltern.py
 website-backend/tests/test_lead_affoltern.py
