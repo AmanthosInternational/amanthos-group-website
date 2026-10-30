@@ -7,6 +7,11 @@
  * schlimmer als keiner. Meta und Google Ads nur mit Einwilligung (window.amConsent), dieselbe
  * event_id im Browser und im Server-Ereignis, damit Meta entdoppelt.
  *
+ * Naechte: eine Zahl von NIGHTS_MIN bis NIGHTS_MAX oder `kuerzer` (Kasten "Kuerzer als 29 Naechte").
+ * Die Obergrenze je Anreise ist dieselbe Regel wie im Backend (hotel_briefe.max_naechte): der
+ * Aufenthalt endet vor dem gleichen Kalendertag drei Monate spaeter. Ein Wunsch darueber wird auf die
+ * Grenze gesetzt, nie verworfen; das Backend klemmt unabhaengig davon noch einmal.
+ *
  * Firmenlink: das Inline-Skript im <head> hat den Token aus `#f=` nach window.__affolternToken
  * gelegt und das Fragment entfernt. Hier wird er mit firmen.json entschluesselt; passt er, stehen
  * Firma und E-Mail im Formular, und die Kennung (nie der Token) geht als `firmenlink` mit.
@@ -30,16 +35,14 @@
       fehlerVor: 'Ihre Anfrage konnte nicht gesendet werden. Bitte rufen Sie uns an unter ',
       fehlerNach: ' oder schreiben Sie an ',
       pflicht: 'Bitte geben Sie Ihren Namen und eine gültige E-Mail-Adresse an.',
-      firma: 'Ihre Firmenangaben sind bereits eingetragen.',
-      naechte: function (n) { return n + ' Nächte'; }
+      firma: 'Ihre Firmenangaben sind bereits eingetragen.'
     },
     en: {
       senden: 'Sending …',
       fehlerVor: 'Your enquiry could not be sent. Please call us on ',
       fehlerNach: ' or write to ',
       pflicht: 'Please enter your name and a valid email address.',
-      firma: 'Your company details are already filled in.',
-      naechte: function (n) { return n + ' nights'; }
+      firma: 'Your company details are already filled in.'
     }
   };
 
@@ -80,10 +83,29 @@
     return 'af-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
   }
 
-  function erlaubteNaechte(cfg) {
-    var liste = [String(cfg.NIGHTS_MAX), 'kuerzer'];
-    if (cfg.NIGHTS_89_ENABLED) (cfg.NIGHTS_LONG || []).forEach(function (n) { liste.push(String(n)); });
-    return liste;
+  /** Hoechstzahl Naechte fuer eine Anreise (YYYY-MM-DD), wie hotel_briefe.max_naechte; ohne gueltiges Datum NIGHTS_MAX. */
+  function maxNaechte(arrival, cfg) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str(arrival));
+    if (!m) return cfg.NIGHTS_MAX;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var start = Date.UTC(y, mo - 1, d);
+    if (isNaN(start) || new Date(start).getUTCDate() !== d) return cfg.NIGHTS_MAX;
+    var zm = mo + 2; // 0-basiert: Monat + 3
+    var zy = y + Math.floor(zm / 12);
+    zm = zm % 12;
+    var letzter = new Date(Date.UTC(zy, zm + 1, 0)).getUTCDate();
+    var ende = Date.UTC(zy, zm, Math.min(d, letzter));
+    return Math.min(cfg.NIGHTS_MAX, Math.round((ende - start) / 86400000) - 1);
+  }
+
+  /** `kuerzer`, eine Zahl von NIGHTS_MIN bis zur Grenze der Anreise (darueber die Grenze), sonst ''. */
+  function naechteWert(nights, arrival, cfg) {
+    var t = str(nights).toLowerCase();
+    if (t === 'kuerzer') return t;
+    if (!/^[1-9]\d?$/.test(t)) return '';
+    var n = +t;
+    if (n < cfg.NIGHTS_MIN || n > cfg.NIGHTS_MAX) return '';
+    return String(Math.min(n, maxNaechte(arrival, cfg)));
   }
 
   /**
@@ -94,18 +116,18 @@
   function buildPayload(i, cfg) {
     var c = i.campaign || {};
     var rooms = str(i.rooms);
-    var nights = str(i.nights).toLowerCase();
     var persons = str(i.persons);
+    var arrival = DATUM_RE.test(str(i.arrival)) ? str(i.arrival) : '';
     var out = {
       form: cfg.FORM_KIND,
       name: str(i.name).slice(0, 200),
       email: str(i.email).slice(0, 200),
       phone: str(i.phone).slice(0, 40),
       company: str(i.company).slice(0, 200),
-      arrival: DATUM_RE.test(str(i.arrival)) ? str(i.arrival) : '',
+      arrival: arrival,
       rooms: /^[1-9]\d?$/.test(rooms) && +rooms <= cfg.ROOMS_MAX ? rooms : '',
       persons: persons === '1' || persons === '2' ? persons : '',
-      nights: erlaubteNaechte(cfg).indexOf(nights) >= 0 ? nights : '',
+      nights: naechteWert(i.nights, arrival, cfg),
       event_id: str(i.eventId),
       locale: localeOf(i.lang),
       utm_source: '', utm_medium: '', utm_campaign: '',
@@ -163,15 +185,19 @@
 
   function $(doc, id) { return doc.getElementById(id); }
 
-  function naechteOptionen(doc, cfg, lang) {
-    var sel = $(doc, 'af-nights');
-    if (!sel || !cfg.NIGHTS_89_ENABLED) return;
-    (cfg.NIGHTS_LONG || []).forEach(function (n) {
-      var o = doc.createElement('option');
-      o.value = String(n);
-      o.textContent = T(lang).naechte(n);
-      sel.appendChild(o);
-    });
+  /** Zahlenfeld 29 bis zur Grenze der gewaehlten Anreise; der Kasten "kuerzer" schaltet es ab. */
+  function naechteFeld(doc, cfg) {
+    var feld = $(doc, 'af-nights'), datum = $(doc, 'af-arrival'), kuerzer = $(doc, 'af-nights-shorter');
+    if (!feld) return;
+    feld.min = String(cfg.NIGHTS_MIN);
+    function grenze() {
+      var max = maxNaechte(datum ? datum.value : '', cfg);
+      feld.max = String(max);
+      if (+feld.value > max) feld.value = String(max);
+    }
+    grenze();
+    if (datum) datum.addEventListener('change', grenze);
+    if (kuerzer) kuerzer.addEventListener('change', function () { feld.disabled = kuerzer.checked; });
   }
 
   function vorausfuellen(doc, w, cfg, lang, zustand) {
@@ -205,7 +231,7 @@
       var g = arrivalBounds(new Date(), cfg.ARRIVAL_DAYS);
       datum.min = g.min; datum.max = g.max;
     }
-    naechteOptionen(doc, cfg, lang);
+    naechteFeld(doc, cfg);
     vorausfuellen(doc, w, cfg, lang, zustand);
 
     var status = $(doc, 'af-status');
@@ -219,10 +245,12 @@
       e.preventDefault();
       if (zustand.laeuft) return;
       function wert(id) { var el = $(doc, id); return el ? el.value : ''; }
+      var kuerzer = $(doc, 'af-nights-shorter');
+      var naechte = kuerzer && kuerzer.checked ? 'kuerzer' : wert('af-nights');
       var einwilligung = granted(w) ? 'granted' : '';
       var payload = buildPayload({
         name: wert('af-name'), email: wert('af-email'), phone: wert('af-phone'), company: wert('af-company'),
-        arrival: wert('af-arrival'), rooms: wert('af-rooms'), persons: wert('af-persons'), nights: wert('af-nights'),
+        arrival: wert('af-arrival'), rooms: wert('af-rooms'), persons: wert('af-persons'), nights: naechte,
         honeypot: wert('af-company-website'), lang: lang, eventId: newEventId(),
         campaign: readCampaign(w.location ? w.location.search : '', einwilligung === 'granted'),
         consent: einwilligung, firmenlink: zustand.firmenlink
@@ -254,7 +282,7 @@
   var api = {
     PAYLOAD_KEYS: PAYLOAD_KEYS, buildPayload: buildPayload, readCampaign: readCampaign, newEventId: newEventId,
     arrivalBounds: arrivalBounds, leadEvents: leadEvents, localeOf: localeOf, pflichtOk: pflichtOk,
-    fehlerText: fehlerText, erlaubteNaechte: erlaubteNaechte, init: init, VERSION: '1'
+    fehlerText: fehlerText, maxNaechte: maxNaechte, naechteWert: naechteWert, init: init, VERSION: '2'
   };
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (typeof window !== 'undefined' && window && window.document) {

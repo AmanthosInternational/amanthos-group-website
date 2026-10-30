@@ -33,19 +33,27 @@ test('Payload hat genau die 19 Schluessel von K1 in dieser Reihenfolge', () => {
 
 for (const [feld, wert] of [
   ['arrival', '15.01.2027'], ['rooms', '0'], ['rooms', '31'], ['rooms', '02'], ['persons', '3'],
-  ['nights', '28'], ['nights', '45'], ['firmenlink', 'kurz'],
+  ['nights', '28'], ['nights', '90'], ['nights', '089'], ['firmenlink', 'kurz'],
 ]) {
   test(`Nebenfeld ${feld}=${wert} faellt auf leer`, () => {
     assert.equal(page.buildPayload(eingabe({ [feld]: wert }), CFG)[feld], '');
   });
 }
 
-test('Naechte 30 bis 89 nur mit NIGHTS_89_ENABLED (Rotbeweis per Schalter)', () => {
-  assert.equal(CFG.NIGHTS_89_ENABLED, false);
-  assert.equal(page.buildPayload(eingabe({ nights: '89' }), CFG).nights, '');
-  const an = { ...CFG, NIGHTS_89_ENABLED: true };
-  assert.equal(page.buildPayload(eingabe({ nights: '89' }), an).nights, '89');
+test('Naechte 29 bis 89 frei, im Dreimonatsfenster geklemmt (Nachtrag 1)', () => {
+  assert.equal(CFG.NIGHTS_MIN, 29);
+  assert.equal(CFG.NIGHTS_MAX, 89);
+  assert.equal(page.buildPayload(eingabe({ nights: '45' }), CFG).nights, '45');
+  assert.equal(page.buildPayload(eingabe({ nights: '89' }), CFG).nights, '89');
+  assert.equal(page.buildPayload(eingabe({ nights: '89', arrival: '2027-02-15' }), CFG).nights, '88');
   assert.equal(page.buildPayload(eingabe({ nights: 'kuerzer' }), CFG).nights, 'kuerzer');
+  assert.equal(page.buildPayload(eingabe({ nights: '89', arrival: '' }), CFG).nights, '89', 'ohne Datum keine Klemme');
+});
+
+test('maxNaechte wie hotel_briefe.max_naechte', () => {
+  const faelle = [['2026-11-01', 89], ['2027-01-15', 89], ['2027-01-30', 89], ['2027-01-31', 88], ['2027-02-01', 88],
+    ['2027-02-15', 88], ['2027-02-28', 88], ['2027-03-01', 89], ['2028-02-01', 89], ['kein-datum', 89], ['2027-02-30', 89]];
+  for (const [a, n] of faelle) assert.equal(page.maxNaechte(a, CFG), n, a);
 });
 
 test('ohne Einwilligung keine Klick-Kennungen im Payload', () => {
