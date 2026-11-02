@@ -71,7 +71,7 @@
   </script>
   <script defer src="/affoltern/js/affoltern-config.js"></script>
   <script defer src="/affoltern/js/affoltern-firmenlink.js"></script>
-  <script defer src="/affoltern/js/affoltern-page.js"></script>
+  <script defer src="/affoltern/js/affoltern-page.js?v=3"></script>
 </head>
 <body>
 
@@ -104,7 +104,7 @@
     <div class="anfrage" id="anfrage">
       <form id="af-form">
         <h2>Ask for your price</h2>
-        <p class="anfrage__lead">In one minute. You receive your offer with the price by email.</p>
+        <p class="anfrage__lead">In one minute. Email or phone is enough: with an email you receive your offer with the price at once, otherwise we call you back.</p>
         <p class="af-hinweis" id="af-prefill" hidden></p>
         <div class="felder">
           <div class="feld feld--halb">
@@ -134,11 +134,11 @@
             <input type="text" id="af-name" name="name" autocomplete="name" required minlength="2" maxlength="200">
           </div>
           <div class="feld">
-            <label for="af-email">Email</label>
-            <input type="email" id="af-email" name="email" autocomplete="email" required maxlength="200">
+            <label for="af-email">Email <span class="optional">(or phone)</span></label>
+            <input type="email" id="af-email" name="email" autocomplete="email" maxlength="200">
           </div>
           <div class="feld feld--halb">
-            <label for="af-phone">Phone <span class="optional">(optional)</span></label>
+            <label for="af-phone">Phone <span class="optional">(or email)</span></label>
             <input type="tel" id="af-phone" name="phone" autocomplete="tel" maxlength="40">
           </div>
           <div class="feld feld--halb">
@@ -150,13 +150,13 @@
             <input type="text" id="af-company-website" name="company_website" tabindex="-1" autocomplete="off">
           </div>
         </div>
-        <button type="submit" class="knopf" id="af-submit">Get the price by email</button>
+        <button type="submit" class="knopf" id="af-submit">Ask for the price</button>
         <p class="af-status" id="af-status" role="status" aria-live="polite"></p>
         <p class="datenschutz" id="af-consent">We use your details only to answer your enquiry. More in the <a href="/privacy/">privacy policy</a>.</p>
       </form>
       <div class="danke" id="af-success" tabindex="-1" hidden>
         <h2>Thank you, we have received your enquiry.</h2>
-        <p>You will receive your offer with the price by email from hotel@amanthos.com within one working day at the latest.</p>
+        <p>With an email address, your offer with the price reaches your inbox within a few minutes. Without one, we call you back within one working day.</p>
         <p>Would you rather talk it through? Choose a time for a call back:</p>
         <p><a class="knopf knopf--leise" href="https://cal.com/team/amanthos/affoltern-rueckruf" rel="noopener">Book a call back</a></p>
         <p>Reception: <a href="tel:+41432178687">+41 43 217 86 87</a> · <a href="mailto:hotel@amanthos.com">hotel@amanthos.com</a></p>
