@@ -81,7 +81,7 @@ test('Pflichtfelder und Sprache', () => {
   assert.equal(page.pflichtOk(page.buildPayload(eingabe({ email: 'kein-at', phone: '+41 43 217 86 87' }), CFG)), false);
   assert.equal(page.localeOf('en-GB'), 'en');
   assert.equal(page.localeOf('fr'), 'de');
-  assert.match(page.fehlerText('de', CFG), /\+41 43 217 86 87.*hotel@amanthos\.com/);
+  assert.match(page.fehlerText('de', CFG), /\+41 79 543 97 76.*hotel@amanthos\.com/);
 });
 
 test('arrivalBounds: heute bis heute plus 365 Tage', () => {
@@ -131,4 +131,53 @@ test('Firmenlink-Roundtrip: Generator verschluesselt, Seite entschluesselt', asy
   assert.equal(await fl.entschluesseln('kein-token', eintraege), null);
   const falsch = { [id]: eintraege[id].slice(0, -4) + 'AAAA' };
   assert.equal(await fl.entschluesseln(token, falsch), null, 'manipuliertes Chiffrat');
+});
+
+// Entscheid 02.11.2026: direkte Handynummer der Rezeption statt Festnetz (KI-Rezeption).
+test('Rezeptionsnummer ist die Handynummer in config und beiden Seiten', async () => {
+  const { readFileSync } = await import('node:fs');
+  assert.equal(CFG.PHONE, '+41 79 543 97 76');
+  assert.equal(CFG.PHONE_HREF, 'tel:+41795439776');
+  for (const f of ['../affoltern/index.html', '../affoltern/en/index.html']) {
+    const html = readFileSync(new URL(f, import.meta.url), 'utf8');
+    assert.equal(html.split('tel:+41795439776').length - 1, 2, f + ' tel-Links');
+    assert.equal(html.split('+41 79 543 97 76').length - 1, 3, f + ' Anzeige');
+    assert.ok(!html.includes('217 86 87') && !html.includes('432178687'), f + ' keine alte Nummer');
+  }
+});
+
+// Feldpruefung beim Verlassen: gleiche Regel wie emailOk, leer bleibt erlaubt.
+function fakeFeld(value) {
+  const f = { value, validity: '', listeners: {}, setCustomValidity(m) { this.validity = m; }, addEventListener(t, fn) { (this.listeners[t] ||= []).push(fn); } };
+  return f;
+}
+
+test('E-Mail-Feld: ungueltige Adresse wird beim Verlassen gemeldet, leer und gueltig nicht', () => {
+  const de = fakeFeld('kein-at');
+  assert.equal(page.emailFeldPruefen(de, 'de'), false);
+  assert.match(de.validity, /E-Mail-Adresse/);
+  const en = fakeFeld('a@b');
+  assert.equal(page.emailFeldPruefen(en, 'en'), false);
+  assert.match(en.validity, /email address/);
+  for (const ok of ['', 'testperson@example.invalid']) {
+    const f = fakeFeld(ok);
+    f.validity = 'alt';
+    assert.equal(page.emailFeldPruefen(f, 'de'), true);
+    assert.equal(f.validity, '');
+  }
+});
+
+test('init haengt die Pruefung an blur und change des Feldes und zeigt den Text im Status', () => {
+  const els = { 'af-form': fakeFeld(''), 'af-email': fakeFeld('kein-at'), 'af-status': { textContent: '', className: '' } };
+  const doc = { documentElement: { getAttribute: () => 'de' }, getElementById: (id) => els[id] || null };
+  page.init(doc, { AFFOLTERN_CONFIG: CFG, fetch: undefined });
+  assert.ok(els['af-email'].listeners.blur && els['af-email'].listeners.change);
+  els['af-email'].listeners.blur[0]();
+  assert.match(els['af-email'].validity, /E-Mail-Adresse/);
+  assert.match(els['af-status'].textContent, /E-Mail-Adresse/);
+  assert.match(els['af-status'].className, /fehler/);
+  els['af-email'].value = '';
+  els['af-email'].listeners.change[0]();
+  assert.equal(els['af-email'].validity, '');
+  assert.equal(els['af-status'].textContent, '');
 });

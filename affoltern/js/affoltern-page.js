@@ -35,6 +35,7 @@
       fehlerVor: 'Ihre Anfrage konnte nicht gesendet werden. Bitte rufen Sie uns an unter ',
       fehlerNach: ' oder schreiben Sie an ',
       pflicht: 'Bitte geben Sie Ihren Namen und eine E-Mail-Adresse oder Telefonnummer an.',
+      emailUngueltig: 'Bitte prüfen Sie die E-Mail-Adresse (Beispiel: name@firma.ch) oder lassen Sie das Feld leer und geben Sie eine Telefonnummer an.',
       firma: 'Ihre Firmenangaben sind bereits eingetragen.'
     },
     en: {
@@ -42,6 +43,7 @@
       fehlerVor: 'Your enquiry could not be sent. Please call us on ',
       fehlerNach: ' or write to ',
       pflicht: 'Please enter your name and an email address or phone number.',
+      emailUngueltig: 'Please check the email address (example: name@company.com) or leave the field empty and enter a phone number.',
       firma: 'Your company details are already filled in.'
     }
   };
@@ -153,6 +155,14 @@
     return /^\+?[0-9 ()./-]{7,40}$/.test(phone) && phone.replace(/\D/g, '').length >= 7;
   }
 
+  /** Prueft das E-Mail-Feld beim Verlassen: leer ist erlaubt, eine eingetippte ungueltige Adresse wird gemeldet. */
+  function emailFeldPruefen(feld, lang) {
+    var v = String(feld.value || '').trim();
+    var ok = v === '' || emailOk(v);
+    feld.setCustomValidity(ok ? '' : T(lang).emailUngueltig);
+    return ok;
+  }
+
   function pflichtOk(p) {
     if (p.name.length < 2) return false;
     if (p.email) return emailOk(p.email);
@@ -250,6 +260,18 @@
       status.className = fehler ? 'af-status af-status--fehler' : 'af-status';
     }
 
+    var mailFeld = $(doc, 'af-email');
+    if (mailFeld) {
+      var mailPruefen = function () {
+        var ok = emailFeldPruefen(mailFeld, lang);
+        if (!ok) zeigen(T(lang).emailUngueltig, true);
+        else if (status && status.className.indexOf('af-status--fehler') !== -1) zeigen('', false);
+      };
+      mailFeld.addEventListener('blur', mailPruefen);
+      mailFeld.addEventListener('change', mailPruefen);
+      mailFeld.addEventListener('input', function () { mailFeld.setCustomValidity(''); });
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (zustand.laeuft) return;
@@ -290,7 +312,7 @@
 
   var api = {
     PAYLOAD_KEYS: PAYLOAD_KEYS, buildPayload: buildPayload, readCampaign: readCampaign, newEventId: newEventId,
-    arrivalBounds: arrivalBounds, leadEvents: leadEvents, localeOf: localeOf, pflichtOk: pflichtOk,
+    arrivalBounds: arrivalBounds, leadEvents: leadEvents, localeOf: localeOf, pflichtOk: pflichtOk, emailFeldPruefen: emailFeldPruefen,
     fehlerText: fehlerText, maxNaechte: maxNaechte, naechteWert: naechteWert, init: init, VERSION: '3'
   };
   if (typeof module === 'object' && module.exports) module.exports = api;
