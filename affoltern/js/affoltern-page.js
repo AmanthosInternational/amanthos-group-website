@@ -34,14 +34,14 @@
       senden: 'Wird gesendet …',
       fehlerVor: 'Ihre Anfrage konnte nicht gesendet werden. Bitte rufen Sie uns an unter ',
       fehlerNach: ' oder schreiben Sie an ',
-      pflicht: 'Bitte geben Sie Ihren Namen und eine gültige E-Mail-Adresse an.',
+      pflicht: 'Bitte geben Sie Ihren Namen und eine E-Mail-Adresse oder Telefonnummer an.',
       firma: 'Ihre Firmenangaben sind bereits eingetragen.'
     },
     en: {
       senden: 'Sending …',
       fehlerVor: 'Your enquiry could not be sent. Please call us on ',
       fehlerNach: ' or write to ',
-      pflicht: 'Please enter your name and a valid email address.',
+      pflicht: 'Please enter your name and an email address or phone number.',
       firma: 'Your company details are already filled in.'
     }
   };
@@ -146,8 +146,17 @@
     return geordnet;
   }
 
+  // Entscheid 02.11.2026: E-Mail ODER Telefon genuegt, wie contact_affoltern.parse (7 Ziffern).
+  // Eine eingetippte, aber ungueltige Adresse wird gemeldet statt still verworfen.
+  function emailOk(email) { return /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(email); }
+  function telefonOk(phone) {
+    return /^\+?[0-9 ()./-]{7,40}$/.test(phone) && phone.replace(/\D/g, '').length >= 7;
+  }
+
   function pflichtOk(p) {
-    return p.name.length >= 2 && /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(p.email);
+    if (p.name.length < 2) return false;
+    if (p.email) return emailOk(p.email);
+    return telefonOk(p.phone);
   }
 
   function granted(w) {
@@ -282,7 +291,7 @@
   var api = {
     PAYLOAD_KEYS: PAYLOAD_KEYS, buildPayload: buildPayload, readCampaign: readCampaign, newEventId: newEventId,
     arrivalBounds: arrivalBounds, leadEvents: leadEvents, localeOf: localeOf, pflichtOk: pflichtOk,
-    fehlerText: fehlerText, maxNaechte: maxNaechte, naechteWert: naechteWert, init: init, VERSION: '2'
+    fehlerText: fehlerText, maxNaechte: maxNaechte, naechteWert: naechteWert, init: init, VERSION: '3'
   };
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (typeof window !== 'undefined' && window && window.document) {

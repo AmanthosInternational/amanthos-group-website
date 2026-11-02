@@ -74,6 +74,11 @@ test('Pflichtfelder und Sprache', () => {
   assert.equal(page.pflichtOk(page.buildPayload(eingabe(), CFG)), true);
   assert.equal(page.pflichtOk(page.buildPayload(eingabe({ name: 'X' }), CFG)), false);
   assert.equal(page.pflichtOk(page.buildPayload(eingabe({ email: 'kein-at' }), CFG)), false);
+  // E-Mail ODER Telefon (Entscheid 02.11.2026)
+  assert.equal(page.pflichtOk(page.buildPayload(eingabe({ email: '', phone: '+41 43 217 86 87' }), CFG)), true);
+  assert.equal(page.pflichtOk(page.buildPayload(eingabe({ email: '', phone: '' }), CFG)), false);
+  assert.equal(page.pflichtOk(page.buildPayload(eingabe({ email: '', phone: '123' }), CFG)), false);
+  assert.equal(page.pflichtOk(page.buildPayload(eingabe({ email: 'kein-at', phone: '+41 43 217 86 87' }), CFG)), false);
   assert.equal(page.localeOf('en-GB'), 'en');
   assert.equal(page.localeOf('fr'), 'de');
   assert.match(page.fehlerText('de', CFG), /\+41 43 217 86 87.*hotel@amanthos\.com/);

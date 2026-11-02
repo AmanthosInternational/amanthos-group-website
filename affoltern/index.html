@@ -71,7 +71,7 @@
   </script>
   <script defer src="/affoltern/js/affoltern-config.js"></script>
   <script defer src="/affoltern/js/affoltern-firmenlink.js"></script>
-  <script defer src="/affoltern/js/affoltern-page.js"></script>
+  <script defer src="/affoltern/js/affoltern-page.js?v=3"></script>
 </head>
 <body>
 
@@ -104,7 +104,7 @@
     <div class="anfrage" id="anfrage">
       <form id="af-form">
         <h2>Preis anfragen</h2>
-        <p class="anfrage__lead">In einer Minute. Sie erhalten Ihr Angebot mit Preis per E-Mail.</p>
+        <p class="anfrage__lead">In einer Minute. E-Mail oder Telefon genügt: mit E-Mail erhalten Sie Ihr Angebot mit Preis sofort, sonst rufen wir Sie zurück.</p>
         <p class="af-hinweis" id="af-prefill" hidden></p>
         <div class="felder">
           <div class="feld feld--halb">
@@ -123,7 +123,7 @@
             </select>
           </div>
           <div class="feld feld--halb">
-            <label for="af-persons">Personen je Zimmer</label>
+            <label for="af-persons">Personen je Zimmer <span class="optional">(freiwillig)</span></label>
             <select id="af-persons" name="persons">
               <option value="1" selected>1 Person</option>
               <option value="2">2 Personen</option>
@@ -134,11 +134,11 @@
             <input type="text" id="af-name" name="name" autocomplete="name" required minlength="2" maxlength="200">
           </div>
           <div class="feld">
-            <label for="af-email">E-Mail</label>
-            <input type="email" id="af-email" name="email" autocomplete="email" required maxlength="200">
+            <label for="af-email">E-Mail <span class="optional">(oder Telefon)</span></label>
+            <input type="email" id="af-email" name="email" autocomplete="email" maxlength="200">
           </div>
           <div class="feld feld--halb">
-            <label for="af-phone">Telefon <span class="optional">(freiwillig)</span></label>
+            <label for="af-phone">Telefon <span class="optional">(oder E-Mail)</span></label>
             <input type="tel" id="af-phone" name="phone" autocomplete="tel" maxlength="40">
           </div>
           <div class="feld feld--halb">
@@ -150,13 +150,13 @@
             <input type="text" id="af-company-website" name="company_website" tabindex="-1" autocomplete="off">
           </div>
         </div>
-        <button type="submit" class="knopf" id="af-submit">Preis per E-Mail erhalten</button>
+        <button type="submit" class="knopf" id="af-submit">Preis anfragen</button>
         <p class="af-status" id="af-status" role="status" aria-live="polite"></p>
         <p class="datenschutz" id="af-consent">Ihre Angaben verwenden wir nur für die Antwort auf Ihre Anfrage. Mehr in der <a href="/privacy/">Datenschutzerklärung</a>.</p>
       </form>
       <div class="danke" id="af-success" tabindex="-1" hidden>
         <h2>Danke, Ihre Anfrage ist bei uns.</h2>
-        <p>Ihr Angebot mit Preis erhalten Sie per E-Mail von hotel@amanthos.com, spätestens innert eines Werktags.</p>
+        <p>Mit E-Mail-Adresse ist Ihr Angebot mit Preis in wenigen Minuten in Ihrem Postfach. Ohne E-Mail rufen wir Sie innert eines Werktags zurück.</p>
         <p>Lieber gleich persönlich besprechen? Wählen Sie einen Termin für einen Rückruf:</p>
         <p><a class="knopf knopf--leise" href="https://cal.com/team/amanthos/affoltern-rueckruf" rel="noopener">Rückruf-Termin wählen</a></p>
         <p>Rezeption: <a href="tel:+41432178687">+41 43 217 86 87</a> · <a href="mailto:hotel@amanthos.com">hotel@amanthos.com</a></p>
