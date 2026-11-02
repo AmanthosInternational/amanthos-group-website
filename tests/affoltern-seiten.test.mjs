@@ -53,7 +53,8 @@ for (const [sp, html] of Object.entries(SEITEN)) {
     assert.ok(text.includes(sp === 'de' ? 'alle 14 Tage' : 'every 14 days'));
     assert.ok(text.includes(sp === 'de' ? 'Bettwäschewechsel wöchentlich' : 'Bedding changed weekly'));
     assert.equal(html.split('https://cal.com/team/amanthos/affoltern-rueckruf').length - 1, 1);
-    assert.ok(text.includes('+41 43 217 86 87') && text.includes('hotel@amanthos.com'));
+    assert.ok(text.includes('+41 79 543 97 76') && text.includes('hotel@amanthos.com'));
+    assert.ok(!text.includes('217 86 87'));
     assert.ok(!text.includes('booking@'));
   });
 
