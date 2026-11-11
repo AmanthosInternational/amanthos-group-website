@@ -2,8 +2,27 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=https://script.google.com/macros/s/AKfycbzRzCSL-xWge4Ky9QngkOiWe1P0jEmv2ZWOGkddRZUM__oQfcYw3Gic2YFcbTkM1OY2/exec">
+    <meta name="robots" content="noindex">
     <title>Redirecting...</title>
+    <!-- Weiterleitung zum Erstinterview. Aus der Adresse gehen nur lang, stelle, src und test mit
+         (Vorbelegung von Sprache und Stelle, Kurzzeichen der Kampagne); alles andere bleibt hier. -->
+    <script>
+        (function () {
+            var ziel = "https://script.google.com/macros/s/AKfycbzRzCSL-xWge4Ky9QngkOiWe1P0jEmv2ZWOGkddRZUM__oQfcYw3Gic2YFcbTkM1OY2/exec";
+            var teile = [];
+            try {
+                var p = new URLSearchParams(window.location.search);
+                ["lang", "stelle", "src", "test"].forEach(function (k) {
+                    var v = p.get(k);
+                    if (v && v.length <= 80) teile.push(k + "=" + encodeURIComponent(v));
+                });
+            } catch (e) { teile = []; }
+            window.location.replace(ziel + (teile.length ? "?" + teile.join("&") : ""));
+        })();
+    </script>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=https://script.google.com/macros/s/AKfycbzRzCSL-xWge4Ky9QngkOiWe1P0jEmv2ZWOGkddRZUM__oQfcYw3Gic2YFcbTkM1OY2/exec">
+    </noscript>
 </head>
 <body>
     <p>Redirecting... <a href="https://script.google.com/macros/s/AKfycbzRzCSL-xWge4Ky9QngkOiWe1P0jEmv2ZWOGkddRZUM__oQfcYw3Gic2YFcbTkM1OY2/exec">Click here if not redirected.</a></p>
